@@ -23,7 +23,7 @@ export class SlotsManipulatorService {
     }, []);
   }
 
-  static deleteSlot(slots: Slot[], slotId: string): Slot[] {
+  static deleteSlot(slots: Slot[], slotId: number): Slot[] {
     return slots.filter(slot => slot.id !== slotId);
   }
 }

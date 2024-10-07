@@ -1,17 +1,5 @@
-type Model = 'gpt-4-turbo' | 'gpt-4o' | 'gpt-3.5-turbo' | 'gpt-4o-mini';
-
-type ChatGPTSlot = {
-  type?: Model;
-  system?: string;
-  /** config */
-  maxTokens?: number; // max 4000
-  temperature?: number; // 의외성 (0~1)
-  topP?: number; // 단어 풀의 범위(0~1)
-  frequencyPenalty?: number; // 자주 사용하는 단어 억제
-  presencePenalty?: number; // 이미 사용된 단어 억제
-};
-
-export type Slot = { id: string; name: string; isSelected: boolean } & ChatGPTSlot;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type Slot = { id: number; data: any; isSelected: boolean };
 
 type Chat = {
   role: 'user' | 'assistant' | 'error';
@@ -25,7 +13,7 @@ type AddNewSlot = {
 };
 type SelectSlot = {
   type: 'SelectSlot';
-  input: string;
+  input: number;
   data?: 'success';
 };
 type UpdateSlot = {
@@ -61,14 +49,6 @@ type RequestInitialDragGPT = {
 type RequestDragGPT = {
   type: 'RequestDragGPTStream';
   input?: { chats: Chat[]; sessionId: string };
-  data?: { result: string; chunk?: string; isDone?: boolean };
-};
-type RequestQuickChatGPT = {
-  type: 'RequestQuickChatGPTStream';
-  input?: {
-    messages: Chat[];
-    model: Model;
-  };
   data?: { result: string; chunk?: string; isDone?: boolean };
 };
 type SaveAPIKey = {
@@ -129,7 +109,6 @@ export type ErrorMessage = {
 
 export type Message =
   | RequestInitialDragGPT
-  | RequestQuickChatGPT
   | RequestDragGPT
   | RequestOngoingChatGPT
   | ResetQuickChatHistory

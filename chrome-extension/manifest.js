@@ -28,7 +28,7 @@ const manifest = deepmerge(
     version: packageJson.version,
     description: '__MSG_extensionDescription__',
     host_permissions: ['<all_urls>', 'https://chat.openai.com/*'],
-    permissions: ['storage', 'scripting', 'tabs', 'notifications', 'cookies'],
+    permissions: ['storage', 'scripting', 'tabs', 'notifications', 'cookies', 'webRequest'],
     options_page: 'options/index.html',
     background: {
       service_worker: 'background.iife.js',

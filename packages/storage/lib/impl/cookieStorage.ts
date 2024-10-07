@@ -35,9 +35,9 @@ export class SlotStorage {
     throw notFoundError;
   }
 
-  static async addSlot(slot: Slot): Promise<Slot[]> {
+  static async addSlot(slot: Omit<Slot, 'id' | 'isSelected'>): Promise<Slot[]> {
     const slots: Slot[] = await this.getAllSlots();
-    const newSlot: Slot = { ...slot, isSelected: slots.length === 0 };
+    const newSlot: Slot = { ...slot, id: slots.length + 1, isSelected: slots.length === 0 };
     const addedSlots = SlotsManipulatorService.addSlot(slots, newSlot);
     await this.storage.save(this.SLOTS, addedSlots);
     return addedSlots;
@@ -50,7 +50,7 @@ export class SlotStorage {
     return updatedSlots;
   }
 
-  static async deleteSlot(slotId: string): Promise<Slot[]> {
+  static async deleteSlot(slotId: number): Promise<Slot[]> {
     const slots = await this.getAllSlots();
     const deletedSlots = SlotsManipulatorService.deleteSlot(slots, slotId);
     await this.storage.save(this.SLOTS, deletedSlots);

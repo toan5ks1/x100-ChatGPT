@@ -1,0 +1,30 @@
+{
+  "extensionDescription": {
+    "description": "Zero click - just chat!",
+    "message": "X100 ChatGPT make it all auto for you"
+  },
+  "extensionName": {
+    "description": "X100 ChatGPT",
+    "message": "X100 free tier of ChatGPT"
+  },
+  "toggleTheme": {
+    "message": "Toggle theme"
+  },
+  "loading": {
+    "message": "Loading..."
+  },
+  "greeting": {
+    "description": "Greeting message",
+    "message": "Hello, My name is $NAME$",
+    "placeholders": {
+      "name": {
+        "content": "$1",
+        "example": "John Doe"
+      }
+    }
+  },
+  "hello": {
+    "description": "Placeholder example",
+    "message": "Hello $1"
+  }
+}

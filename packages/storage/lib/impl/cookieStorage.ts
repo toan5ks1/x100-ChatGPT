@@ -35,12 +35,27 @@ export class SlotStorage {
     throw notFoundError;
   }
 
-  static async addSlot(slot: Omit<Slot, 'id' | 'isSelected'>): Promise<Slot[]> {
+  static async getSlotById(id: string): Promise<Slot> {
+    const slots = await this.getAllSlots();
+    const selectedSlot = SlotsManipulatorService.getSlotById(slots, id);
+    if (selectedSlot) {
+      return selectedSlot;
+    }
+    const notFoundError = new Error();
+    notFoundError.name = 'Not found selected slot';
+    notFoundError.message = 'Check selected slot.';
+    throw notFoundError;
+  }
+
+  static async addSlot(slot: Omit<Slot, 'isSelected'>): Promise<Slot[]> {
     const slots: Slot[] = await this.getAllSlots();
-    const newSlot: Slot = { ...slot, id: slots.length + 1, isSelected: slots.length === 0 };
-    const addedSlots = SlotsManipulatorService.addSlot(slots, newSlot);
-    await this.storage.save(this.SLOTS, addedSlots);
-    return addedSlots;
+    const newSlot: Slot = { ...slot, isSelected: slots.length === 0 };
+    const isSlotExist = slots.find(_slot => _slot.id === slot.id);
+    const finalSlots = isSlotExist?.id
+      ? SlotsManipulatorService.updateSlot(slots, newSlot)
+      : SlotsManipulatorService.addSlot(slots, newSlot);
+    await this.storage.save(this.SLOTS, finalSlots);
+    return finalSlots;
   }
 
   static async updateSlot(slot: Slot): Promise<Slot[]> {
@@ -50,7 +65,7 @@ export class SlotStorage {
     return updatedSlots;
   }
 
-  static async deleteSlot(slotId: number): Promise<Slot[]> {
+  static async deleteSlot(slotId: string): Promise<Slot[]> {
     const slots = await this.getAllSlots();
     const deletedSlots = SlotsManipulatorService.deleteSlot(slots, slotId);
     await this.storage.save(this.SLOTS, deletedSlots);

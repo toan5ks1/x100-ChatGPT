@@ -1,17 +1,24 @@
-import { addSlotMessageSendToBackground, createNewChatGPTSlot, getAllSlotsFromBackground } from '@src/action';
-
-const addNewSlot = () => {
-  // const newSlot = createNewChatGPTSlot();
-  getAllSlotsFromBackground();
-  // addSlotMessageSendToBackground(newSlot);
-};
+import { Button } from '@extension/ui/components/button';
+import { TrashIcon, EnterIcon } from '@extension/ui/components/icon';
+import { useGetAllSlots } from '../hooks/useAllSlots';
+import { handleDeleteSlot, handleSelectSlot } from '@src/utils';
 
 export default function AccountListPage() {
+  const slots = useGetAllSlots();
+
   return (
-    <>
-      <button className={'font-bold mt-4 py-1 px-4 rounded shadow hover:scale-105'} onClick={addNewSlot}>
-        Click to send the request get cookies
-      </button>
-    </>
+    <ul className="flex flex-col gap-2">
+      {slots.map(slot => (
+        <li key={slot.id} className="flex justify-between items-center">
+          <span className="w-1/3 truncate">{slot.id.split('@')[0]}</span>
+          <Button size="icon" onClick={() => handleSelectSlot(slot.id)}>
+            <EnterIcon />
+          </Button>
+          <Button size="icon" onClick={() => handleDeleteSlot(slot.id)}>
+            <TrashIcon className="text-red-500" />
+          </Button>
+        </li>
+      ))}
+    </ul>
   );
 }

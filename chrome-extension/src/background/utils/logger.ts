@@ -9,7 +9,10 @@ const Logger = {
     );
   },
   send: (message: { type: any; data?: any }) => {
-    console.log('Message Sending:', `${message.type}\ndata: ${message.data ? JSON.stringify(message.data) : 'none'}`);
+    console.log(
+      'Message Sending:',
+      `${message.type}\ndata: ${typeof message.data === 'string' ? message.data : 'some data'}`,
+    );
   },
   warn: console.warn,
   error: console.error,

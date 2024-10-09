@@ -5,9 +5,8 @@ export class SlotsManipulatorService {
     return slots.find(({ isSelected }) => isSelected);
   }
 
-  static getSelectedSlotIndex(slots: Slot[]): number | undefined {
-    const index = slots.findIndex(({ isSelected }) => isSelected);
-    return index >= 0 ? index : undefined;
+  static getSlotById(slots: Slot[], id: string): Slot | undefined {
+    return slots.find(slot => slot.id === id);
   }
 
   static addSlot(slots: Slot[], slot: Slot): Slot[] {
@@ -23,7 +22,7 @@ export class SlotsManipulatorService {
     }, []);
   }
 
-  static deleteSlot(slots: Slot[], slotId: number): Slot[] {
+  static deleteSlot(slots: Slot[], slotId: string): Slot[] {
     return slots.filter(slot => slot.id !== slotId);
   }
 }

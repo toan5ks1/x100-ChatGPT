@@ -1,9 +1,8 @@
-import 'webextension-polyfill';
 import Logger from './utils/logger';
 import { loginURL } from './utils/constant';
 import { sendErrorMessageToClient, sendMessageToClient } from './utils/message';
 import { type RequiredDataNullableInput } from './utils/type';
-import { exhaustiveMatchingGuard } from './utils';
+import { exhaustiveMatchingGuard, getEmailFromAuthHeader, removeReadOnlyProperties } from './utils';
 import { type Message } from '@extension/storage/types';
 import { cookieName, hostUrl } from '@extension/shared/index';
 import { SlotStorage } from '@extension/storage';
@@ -39,13 +38,17 @@ chrome.runtime.onConnect.addListener(port => {
           break;
         }
         case 'SelectSlot': {
-          const slots = await SlotStorage.getAllSlots();
-          const updatedSlots = slots.map(slot => ({
-            ...slot,
-            isSelected: message.input === slot.id,
-          }));
-          await SlotStorage.setAllSlots(updatedSlots);
-          sendResponse({ type: 'SelectSlot', data: updatedSlots });
+          const selectedSlot = await SlotStorage.getSlotById(message.input);
+          await SlotStorage.updateSlot({ ...selectedSlot, isSelected: true });
+          chrome.cookies.set(removeReadOnlyProperties(selectedSlot.data), () => {
+            console.log('set cookie successully');
+          });
+          sendResponse({ type: 'SelectSlot', data: 'success' });
+          break;
+        }
+        case 'DeleteSlot': {
+          await SlotStorage.deleteSlot(message.input);
+          sendResponse({ type: 'DeleteSlot', data: 'success' });
           break;
         }
         default: {
@@ -59,15 +62,18 @@ chrome.runtime.onConnect.addListener(port => {
   });
 });
 
-chrome.webRequest.onCompleted.addListener(
-  async function (details) {
-    if (details.statusCode === 200) {
-      // Save cookies
+chrome.webRequest.onSendHeaders.addListener(
+  async details => {
+    const authHeader = details.requestHeaders?.find(header => header.name.toLowerCase() === 'authorization');
+    if (authHeader?.value && authHeader.value.startsWith('Bearer')) {
+      const email = getEmailFromAuthHeader(authHeader.value);
       const cookie = await chrome.cookies.get({ url: hostUrl, name: cookieName });
-      await SlotStorage.addSlot({ data: cookie });
+
+      await SlotStorage.addSlot({ id: email, data: cookie });
       // Send response to client
       activePort && sendResponseWithPort(activePort, { type: 'AddNewSlot', data: 'success' });
     }
   },
   { urls: [loginURL] }, // Adjust for specific domains if needed
+  ['requestHeaders', 'extraHeaders'],
 );

@@ -5,8 +5,7 @@ import { type RequiredDataNullableInput } from './utils/type';
 import { exhaustiveMatchingGuard, getEmailFromAuthHeader, removeReadOnlyProperties } from './utils';
 import { type Message } from '@extension/storage/types';
 import { cookieName, hostUrl } from '@extension/shared/index';
-import { SlotStorage } from '@extension/storage';
-
+import { SlotStorage, tokenStorage } from '@extension/storage';
 let activePort: chrome.runtime.Port | null = null; // Global variable to store the active port
 
 const sendResponseWithPort = <M extends Message>(port: chrome.runtime.Port, message: RequiredDataNullableInput<M>) => {
@@ -65,10 +64,12 @@ chrome.runtime.onConnect.addListener(port => {
 chrome.webRequest.onSendHeaders.addListener(
   async details => {
     const authHeader = details.requestHeaders?.find(header => header.name.toLowerCase() === 'authorization');
-    if (authHeader?.value && authHeader.value.startsWith('Bearer')) {
-      const email = getEmailFromAuthHeader(authHeader.value);
+    const token = authHeader?.value;
+    if (token && token.startsWith('Bearer')) {
+      const email = getEmailFromAuthHeader(token);
       const cookie = await chrome.cookies.get({ url: hostUrl, name: cookieName });
 
+      await tokenStorage.set({ token });
       await SlotStorage.addSlot({ id: email, data: cookie });
       // Send response to client
       activePort && sendResponseWithPort(activePort, { type: 'AddNewSlot', data: 'success' });

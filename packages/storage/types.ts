@@ -21,15 +21,10 @@ type DeleteSlot = {
   input: string;
   data?: 'success';
 };
-type ResetAPIKey = {
-  type: 'ResetAPIKey';
+type MessageSent = {
+  type: 'MessageSent';
   input?: never;
   data?: 'success';
-};
-type GetAPIKey = {
-  type: 'GetAPIKey';
-  input?: never;
-  data?: string;
 };
 type GetSlots = {
   type: 'GetSlots';
@@ -42,7 +37,7 @@ export type ErrorMessage = {
   error: Error;
 };
 
-export type Message = AddNewSlot | UpdateSlot | GetSlots | GetAPIKey | ResetAPIKey | SelectSlot | DeleteSlot;
+export type Message = AddNewSlot | UpdateSlot | GetSlots | SelectSlot | DeleteSlot | MessageSent;
 
 export type RequestMessage<M = Message> = Omit<M, 'data'>;
 export type ResponseMessage<M = Message> = Omit<M, 'input' | 'error'>;

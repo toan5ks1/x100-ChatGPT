@@ -1,7 +1,7 @@
 import { Button } from '@extension/ui/components/button';
 import { TrashIcon, EnterIcon } from '@extension/ui/components/icon';
 import { useGetAllSlots } from '../hooks/useAllSlots';
-import { handleDeleteSlot, handleSelectSlot } from '@src/utils';
+import { handleDeleteSlot, handleSelectSlot, redirectCurrentTab } from '@src/utils';
 import { tokenStorage } from '@extension/storage';
 
 import {
@@ -25,29 +25,15 @@ async function getCurrentURL() {
   });
 }
 
-function redirectCurrentTab(newUrl: string) {
-  // Query for the active tab in the current window
-  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-    const activeTab = tabs[0]; // Get the active tab
-
-    if (activeTab?.id && newUrl) {
-      // Update the current active tab with the new URL
-      chrome.tabs.update(activeTab.id, { url: newUrl });
-    } else {
-      console.error('No active tab found or invalid URL');
-    }
-  });
-}
-
 export default function AccountListPage() {
   const slots = useGetAllSlots();
   const handleSwitch = async (slotId: string) => {
     const currentURL = await getCurrentURL();
     const conversationId = typeof currentURL === 'string' ? getConversationIdByURL(currentURL) : null;
     const bearerToken = await tokenStorage.get();
+    const header = createHeader(bearerToken?.token);
 
-    if (conversationId && bearerToken?.token) {
-      const header = createHeader(bearerToken.token);
+    if (conversationId && header) {
       const currentNodeId = await getCurrentNodeId(conversationId, header);
       const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
       const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;

@@ -1,5 +1,5 @@
-import { Button } from '@extension/ui/components/button';
-import { useEffect } from 'react';
+import { DialogSharedURL } from './components/shareUrlModal';
+import { useCallback, useEffect, useState } from 'react';
 import { tokenStorage } from '@extension/storage';
 import {
   getConversationIdByURL,
@@ -11,34 +11,62 @@ import {
 } from '@extension/shared';
 
 export default function App() {
-  const handleSwitch = async () => {
-    const conversationId = getConversationIdByURL();
+  const [sharedUrl, setSharedUrl] = useState(undefined);
+  const [messageCount, setMessageCount] = useState(0);
+  const [isOpenSharedModal, setIsOpenSharedModal] = useState(false);
+
+  const checkLimitAsync = useCallback(async () => {
     const bearerToken = await tokenStorage.get();
+    const header = createHeader(bearerToken?.token);
 
-    if (!conversationId && bearerToken?.token) {
-      const header = createHeader(bearerToken.token);
+    if (header) {
       const isHitLimit = await checkHitLimit(header);
-      // const currentNodeId = await getCurrentNodeId(conversationId, header);
-      // const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
 
-      // const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;
+      if (isHitLimit) {
+        const conversationId = getConversationIdByURL();
 
-      // alert(isActivatedSuccess + ' ' + shareData.shareUrl);
-    } else {
-      alert('Token or conversationId not found!');
+        if (conversationId) {
+          const currentNodeId = await getCurrentNodeId(conversationId, header);
+          const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
+
+          const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;
+
+          if (isActivatedSuccess) {
+            setSharedUrl(shareData.shareUrl);
+            setIsOpenSharedModal(true);
+          } else {
+            alert('Cannot share the current chat! Please try again later!');
+          }
+        } else {
+          alert('Token or conversationId not found!');
+        }
+      }
     }
+  }, []);
+
+  const addConversationListener = () => {
+    chrome.runtime.onConnect.addListener(function (port) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      port.onMessage.addListener((responseMessage: any) => {
+        if (responseMessage.type === 'MessageSent') {
+          setMessageCount(pre => pre + 1);
+        }
+      });
+    });
   };
 
   useEffect(() => {
-    // handleSwitch();
+    addConversationListener();
+    checkLimitAsync();
   }, []);
 
+  useEffect(() => {
+    checkLimitAsync();
+  }, [messageCount]);
+
   return (
-    <div className="flex items-center justify-between gap-2 bg-blue-100 rounded py-1 px-2">
-      <div className="flex gap-1 text-blue-500">
-        Edit <strong className="text-blue-700">pages/content-ui/src/app.tsx</strong> and save to reload.
-      </div>
-      <Button onClick={handleSwitch}>Toggle Theme</Button>
-    </div>
+    <>
+      <DialogSharedURL isOpen={isOpenSharedModal} setIsOpen={setIsOpenSharedModal} url={sharedUrl} />
+    </>
   );
 }

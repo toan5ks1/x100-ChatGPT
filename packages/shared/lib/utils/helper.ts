@@ -6,7 +6,10 @@ export function getConversationIdByURL(url: string = window.location.href) {
   return url.split('/c/')?.[1];
 }
 
-export function createHeader(token: string) {
+export function createHeader(token?: string) {
+  if (!token) {
+    return undefined;
+  }
   const myHeaders = new Headers();
   myHeaders.append('Content-Type', 'application/json');
   myHeaders.append('Authorization', token);

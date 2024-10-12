@@ -1,5 +1,5 @@
 import Logger from './utils/logger';
-import { loginURL } from './utils/constant';
+import { conversationURL, loginURL } from './utils/constant';
 import { sendErrorMessageToClient, sendMessageToClient } from './utils/message';
 import { type RequiredDataNullableInput } from './utils/type';
 import { exhaustiveMatchingGuard, getEmailFromAuthHeader, removeReadOnlyProperties } from './utils';
@@ -75,6 +75,16 @@ chrome.webRequest.onSendHeaders.addListener(
       activePort && sendResponseWithPort(activePort, { type: 'AddNewSlot', data: 'success' });
     }
   },
-  { urls: [loginURL] }, // Adjust for specific domains if needed
+  { urls: [loginURL] },
   ['requestHeaders', 'extraHeaders'],
+);
+
+chrome.webRequest.onCompleted.addListener(
+  async details => {
+    if (details) {
+      // Send response to client to notice that the limit is hit
+      // activePort && sendResponseWithPort(activePort, { type: 'AddNewSlot', data: 'success' });
+    }
+  },
+  { urls: [conversationURL] },
 );

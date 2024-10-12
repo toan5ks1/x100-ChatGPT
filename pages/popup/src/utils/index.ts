@@ -23,3 +23,17 @@ export const handleSelectSlot = (id: string, callback?: () => void) => {
     },
   });
 };
+
+export function redirectCurrentTab(newUrl: string) {
+  // Query for the active tab in the current window
+  chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
+    const activeTab = tabs[0]; // Get the active tab
+
+    if (activeTab?.id && newUrl) {
+      // Update the current active tab with the new URL
+      chrome.tabs.update(activeTab.id, { url: newUrl });
+    } else {
+      console.error('No active tab found or invalid URL');
+    }
+  });
+}

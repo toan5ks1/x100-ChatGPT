@@ -12,14 +12,14 @@ export const handleDeleteSlot = (id: string) => {
   });
 };
 
-export const handleSelectSlot = (id: string) => {
+export const handleSelectSlot = (id: string, callback?: () => void) => {
   sendMessageToBackground({
     message: {
       input: id,
       type: 'SelectSlot',
     },
     handleSuccess: () => {
-      alert('Selected successfully!');
+      callback && callback();
     },
   });
 };

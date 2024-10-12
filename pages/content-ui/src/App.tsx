@@ -18,7 +18,6 @@ export default function App() {
     if (!conversationId && bearerToken?.token) {
       const header = createHeader(bearerToken.token);
       const isHitLimit = await checkHitLimit(header);
-      alert(isHitLimit);
       // const currentNodeId = await getCurrentNodeId(conversationId, header);
       // const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
 
@@ -31,7 +30,7 @@ export default function App() {
   };
 
   useEffect(() => {
-    handleSwitch();
+    // handleSwitch();
   }, []);
 
   return (

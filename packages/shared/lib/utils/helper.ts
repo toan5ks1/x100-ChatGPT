@@ -1,7 +1,7 @@
 import { conversationUrl, createShareUrl, litmitChatUrl } from './constant';
 
-export function getConversationIdByURL() {
-  const url = window.location.href;
+export function getConversationIdByURL(url: string = window.location.href) {
+  // const url = window.location.href;
 
   return url.split('/c/')?.[1];
 }

@@ -1,48 +1,25 @@
 import { Button } from '@extension/ui/components/button';
 import { TrashIcon, EnterIcon } from '@extension/ui/components/icon';
 import { useGetAllSlots } from '../hooks/useAllSlots';
-import { handleDeleteSlot, handleSelectSlot, redirectCurrentTab } from '@src/utils';
-import { tokenStorage } from '@extension/storage';
+import { handleDeleteSlot, handleSelectSlot, redirectCurrentTab, shareChatInBg } from '@src/utils';
 
-import {
-  getConversationIdByURL,
-  createHeader,
-  getCurrentNodeId,
-  createShareURL,
-  activeShareURL,
-  hostUrl,
-} from '@extension/shared';
-
-async function getCurrentURL() {
-  return new Promise((resolve, reject) => {
-    chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
-      if (chrome.runtime.lastError) {
-        reject(undefined); // Reject the promise if there's an error
-      } else {
-        resolve(tabs[0].url); // Resolve the promise with the active tab's URL
-      }
-    });
-  });
-}
+import { hostUrl, onContinueChat } from '@extension/shared';
 
 export default function AccountListPage() {
   const slots = useGetAllSlots();
+  console.log(slots);
+
   const handleSwitch = async (slotId: string) => {
-    const currentURL = await getCurrentURL();
-    const conversationId = typeof currentURL === 'string' ? getConversationIdByURL(currentURL) : null;
-    const bearerToken = await tokenStorage.get();
-    const header = createHeader(bearerToken?.token);
+    const shareData = await shareChatInBg();
 
-    if (conversationId && header) {
-      const currentNodeId = await getCurrentNodeId(conversationId, header);
-      const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
-      const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;
-
-      isActivatedSuccess
-        ? handleSelectSlot(slotId, () => redirectCurrentTab(shareData.shareUrl))
-        : alert('Cannot share the current chat! Please try again later!');
+    if (shareData.success) {
+      handleSelectSlot(slotId, () =>
+        redirectCurrentTab(shareData.shareUrl).then(data => {
+          data === 'success' && onContinueChat(shareData.shareId);
+        }),
+      );
     } else {
-      alert('Token or conversationId not found!');
+      alert(shareData.msg ?? 'Share chat failed!');
       handleSelectSlot(slotId, () => redirectCurrentTab(hostUrl));
     }
   };

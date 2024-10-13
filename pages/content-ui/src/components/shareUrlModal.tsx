@@ -1,21 +1,19 @@
+/* eslint-disable react/no-unescaped-entities */
 import React, { type Dispatch, type SetStateAction } from 'react';
 import { ArrowRightIcon } from '@extension/ui/components/icon';
 
 import { Button } from '@extension/ui/components/button';
 import { Label } from '@extension/ui/components/label';
+import { hostUrl } from '@extension/shared';
 
 interface DialogCloseButtonProps {
   isOpen: boolean;
   setIsOpen: Dispatch<SetStateAction<boolean>>;
+  onContinue: () => void;
   url?: string;
 }
 
-export function redirectCurrentTab(newUrl: string) {
-  // Query for the active tab in the current window
-  window.location.href = newUrl;
-}
-
-export function DialogSharedURL({ isOpen, setIsOpen, url = 'https://chatgpt.com' }: DialogCloseButtonProps) {
+export function DialogSharedURL({ isOpen, setIsOpen, onContinue, url = hostUrl }: DialogCloseButtonProps) {
   return isOpen ? (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="flex flex-col bg-zinc-800 gap-4 p-6 rounded-lg shadow-lg w-full max-w-sm">
@@ -32,12 +30,10 @@ export function DialogSharedURL({ isOpen, setIsOpen, url = 'https://chatgpt.com'
           </div>
         </div>
         <div className="flex flex-col sm:flex-row justify-between space-x-2">
-          <Button onClick={() => setIsOpen(false)} className="bg-zinc-700 rounded-md py-1.5">
+          <Button onClick={() => setIsOpen(false)} className="bg-zinc-700 rounded-md px-4 py-1.5">
             Close
           </Button>
-          <Button
-            onClick={() => redirectCurrentTab(url)}
-            className="flex items-center gap-1 bg-zinc-700 rounded-md py-1.5">
+          <Button onClick={onContinue} className="flex items-center gap-1 bg-zinc-700 rounded-md px-4 py-1.5">
             Continue with another profile
             <ArrowRightIcon className="size-4" />
           </Button>

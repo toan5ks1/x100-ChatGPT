@@ -1,4 +1,4 @@
-import { conversationUrl, createShareUrl, litmitChatUrl } from './constant';
+import { conversationUrl, createShareUrl, hostUrl, litmitChatUrl } from './constant';
 
 export function getConversationIdByURL(url: string = window.location.href) {
   // const url = window.location.href;
@@ -71,7 +71,7 @@ export async function activeShareURL(shareId: string, header: Headers) {
 export async function checkHitLimit(header: Headers) {
   try {
     const response = await fetch(litmitChatUrl, {
-      method: 'POST', // or "POST", "PUT", etc. depending on your use case
+      method: 'POST',
       headers: header,
       body: JSON.stringify({}),
     });
@@ -81,5 +81,44 @@ export async function checkHitLimit(header: Headers) {
   } catch (error) {
     console.error('Error making the request:', error);
     return null;
+  }
+}
+
+export async function onContinueChat(shareId: string) {
+  try {
+    const url = `${hostUrl}/share/${shareId}/continue?_data=routes%2Fshare.%24shareId.%28%24action%29`;
+    const response = await fetch(url, {
+      method: 'GET', // or "POST", "PUT", etc. depending on your use case
+      // headers: header,
+      // body: JSON.stringify({ data: 'routes/share.$shareId.($action)' }),
+    });
+    const data = await response.json();
+    window.location.href = `${hostUrl}/share/${shareId}/continue`;
+    return data;
+  } catch (error) {
+    console.error('Error making the request:', error);
+    return null;
+  }
+}
+
+export async function shareChat(header: Headers) {
+  const conversationId = getConversationIdByURL();
+  if (header && conversationId) {
+    try {
+      const currentNodeId = await getCurrentNodeId(conversationId, header);
+      const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
+
+      const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;
+
+      if (isActivatedSuccess) {
+        return { success: true, msg: 'success', ...shareData };
+      }
+
+      return { success: false, msg: 'Cannot share the current chat! Please try again later!' };
+    } catch (err) {
+      return { success: false, msg: 'Something went wrong! try share chat again' };
+    }
+  } else {
+    return { success: false, msg: 'Token or conversationId not found!' };
   }
 }

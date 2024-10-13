@@ -1,4 +1,5 @@
 import { Button } from '@extension/ui/components/button';
+import { PlusIcon } from '@extension/ui/components/icon';
 import { cookieName, hostUrl } from '@extension/shared/index';
 
 function onError(error: unknown) {
@@ -19,7 +20,10 @@ const AddProfileBtn = () => {
   };
 
   return (
-    <Button variant="outline" onClick={() => removeCookie(addNewSlot)}>
+    <Button
+      className="flex items-center gap-1 border border-zinc-500 rounded-md px-2 py-1"
+      onClick={() => removeCookie(addNewSlot)}>
+      <PlusIcon className="size-4" />
       Add profile
     </Button>
   );

@@ -1,10 +1,16 @@
 import Logger from './utils/logger';
-import { conversationURL, loginURL } from './utils/constant';
+import { loginURL } from './utils/constant';
 import { sendErrorMessageToClient, sendMessageToClient } from './utils/message';
 import { type RequiredDataNullableInput } from './utils/type';
-import { exhaustiveMatchingGuard, getEmailFromAuthHeader, removeReadOnlyProperties } from './utils';
+import {
+  exhaustiveMatchingGuard,
+  findAvailableSlot,
+  findCurrentSlot,
+  getEmailFromAuthHeader,
+  removeReadOnlyProperties,
+} from './utils';
 import { type Message } from '@extension/storage/types';
-import { cookieName, hostUrl } from '@extension/shared/index';
+import { cookieName, hostUrl, conversationUrl } from '@extension/shared/index';
 import { SlotStorage, tokenStorage } from '@extension/storage';
 let activePort: chrome.runtime.Port | null = null; // Global variable to store the active port
 
@@ -45,6 +51,34 @@ chrome.runtime.onConnect.addListener(port => {
           sendResponse({ type: 'SelectSlot', data: 'success' });
           break;
         }
+        case 'UpdateSlot': {
+          await SlotStorage.updateSlot(message.input);
+          sendResponse({ type: 'UpdateSlot', data: 'success' });
+          break;
+        }
+        case 'AutoSelectSlot': {
+          const slots = await SlotStorage.getAllSlots();
+          const availableSlot = findAvailableSlot(slots);
+
+          if (availableSlot) {
+            await SlotStorage.updateSlot({ ...availableSlot, isSelected: true });
+            chrome.cookies.set(removeReadOnlyProperties(availableSlot.data), () => {
+              console.log('set cookie successully');
+            });
+            sendResponse({ type: 'AutoSelectSlot', data: 'success' });
+          } else {
+            sendResponse({ type: 'AutoSelectSlot', data: 'failed' });
+          }
+          break;
+        }
+        case 'GetCurrentSlot': {
+          const slots = await SlotStorage.getAllSlots();
+          const currentSlot = findCurrentSlot(slots);
+
+          sendResponse({ type: 'GetCurrentSlot', data: currentSlot ?? 'failed' });
+
+          break;
+        }
         case 'DeleteSlot': {
           await SlotStorage.deleteSlot(message.input);
           sendResponse({ type: 'DeleteSlot', data: 'success' });
@@ -83,8 +117,8 @@ chrome.webRequest.onCompleted.addListener(
   async details => {
     if (details) {
       // Send response to client to notice that the limit is hit
-      // activePort && sendResponseWithPort(activePort, { type: 'AddNewSlot', data: 'success' });
+      activePort && sendResponseWithPort(activePort, { type: 'MessageSent', data: 'success' });
     }
   },
-  { urls: [conversationURL] },
+  { urls: [conversationUrl] },
 );

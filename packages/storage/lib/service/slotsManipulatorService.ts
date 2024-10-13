@@ -1,10 +1,6 @@
 import { type Slot } from '../../types';
 
 export class SlotsManipulatorService {
-  static getSelectedSlot(slots: Slot[]): Slot | undefined {
-    return slots.find(({ isSelected }) => isSelected);
-  }
-
   static getSlotById(slots: Slot[], id: string): Slot | undefined {
     return slots.find(slot => slot.id === id);
   }

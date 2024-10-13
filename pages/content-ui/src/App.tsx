@@ -2,8 +2,7 @@ import { DialogSharedURL } from './components/shareUrlModal';
 import { useCallback, useEffect, useState } from 'react';
 import { tokenStorage } from '@extension/storage';
 import { checkHitLimit, createHeader, onContinueChat, type ShareChat, shareChat } from '@extension/shared';
-import { useGetCurrentSlot } from './hooks/useCurrentSlot';
-import { handleUpdateSlot, handleAutoSelectSlot } from './lib/utils';
+import { handleAutoSelectSlot } from './lib/utils';
 
 const handleRedirect = async (shareUrl?: string) => {
   shareUrl &&
@@ -22,7 +21,6 @@ export default function App() {
   const [sharedData, setSharedData] = useState<ShareChat>({});
   const [messageCount, setMessageCount] = useState(0);
   const [isOpenSharedModal, setIsOpenSharedModal] = useState(false);
-  const currentSlot = useGetCurrentSlot();
 
   // const addConversationListener = () => {
   //   chrome.runtime.onConnect.addListener(function (port) {
@@ -45,7 +43,6 @@ export default function App() {
       const isHitLimit = await checkHitLimit(header);
 
       if (isHitLimit) {
-        currentSlot && handleUpdateSlot({ ...currentSlot, expTime: new Date() });
         const shareData = await shareChat(header);
 
         if (shareData.success) {
@@ -57,7 +54,7 @@ export default function App() {
         }
       }
     }
-  }, [currentSlot]);
+  }, []);
 
   useEffect(() => {
     // addConversationListener();

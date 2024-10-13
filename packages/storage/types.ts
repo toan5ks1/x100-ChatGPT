@@ -1,5 +1,5 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Slot = { id: string; data: any; isSelected: boolean; expTime?: Date };
+export type Slot = { id: string; data: any; expTime?: Date };
 export type ActionResult = 'success' | 'failed';
 
 type AddNewSlot = {
@@ -17,6 +17,11 @@ type UpdateSlot = {
   input: Slot;
   data?: ActionResult;
 };
+type UpdateSlotById = {
+  type: 'UpdateSlotById';
+  input: Omit<Slot, 'data'>;
+  data?: ActionResult;
+};
 type DeleteSlot = {
   type: 'DeleteSlot';
   input: string;
@@ -30,7 +35,7 @@ type MessageSent = {
 type AutoSelectSlot = {
   type: 'AutoSelectSlot';
   input?: never;
-  data?: ActionResult;
+  data?: Slot;
 };
 type GetSlots = {
   type: 'GetSlots';
@@ -40,7 +45,7 @@ type GetSlots = {
 type GetCurrentSlot = {
   type: 'GetCurrentSlot';
   input?: never;
-  data?: Slot;
+  data?: Slot['id'];
 };
 export type ErrorMessage = {
   type: 'Error';
@@ -51,6 +56,7 @@ export type ErrorMessage = {
 export type Message =
   | AddNewSlot
   | UpdateSlot
+  | UpdateSlotById
   | GetSlots
   | GetCurrentSlot
   | SelectSlot

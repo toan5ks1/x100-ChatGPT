@@ -7,7 +7,6 @@ import { hostUrl, onContinueChat } from '@extension/shared';
 
 export default function AccountListPage() {
   const slots = useGetAllSlots();
-  console.log(slots);
 
   const handleSwitch = async (slotId: string) => {
     const shareData = await shareChatInBg();
@@ -19,7 +18,7 @@ export default function AccountListPage() {
         }),
       );
     } else {
-      alert(shareData.msg ?? 'Share chat failed!');
+      console.log(shareData.msg ?? 'Share chat failed!');
       handleSelectSlot(slotId, () => redirectCurrentTab(hostUrl));
     }
   };

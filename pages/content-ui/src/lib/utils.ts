@@ -13,12 +13,25 @@ export const handleUpdateSlot = (slot: Slot, callback?: () => void) => {
   });
 };
 
+export const handleUpdateSlotById = (slot: Omit<Slot, 'data'>, callback?: () => void) => {
+  sendMessageToBackground({
+    message: {
+      input: slot,
+      type: 'UpdateSlotById',
+    },
+    handleSuccess: () => {
+      callback && callback();
+    },
+  });
+};
+
 export const handleAutoSelectSlot = (callback?: () => void) => {
   sendMessageToBackground({
     message: {
       type: 'AutoSelectSlot',
     },
-    handleSuccess: () => {
+    handleSuccess: data => {
+      console.log(data.id);
       callback && callback();
     },
   });

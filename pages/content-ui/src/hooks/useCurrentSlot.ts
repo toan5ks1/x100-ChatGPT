@@ -3,7 +3,7 @@ import { sendMessageToBackgroundAsync } from '@extension/storage/lib/service/mes
 import { type Slot } from '@extension/storage/types';
 
 export const useGetCurrentSlot = () => {
-  const [slots, setSlots] = useState<Slot | undefined>();
+  const [slots, setSlots] = useState<Slot['id'] | undefined>();
 
   useEffect(() => {
     const getCurrentSlot = async () => {

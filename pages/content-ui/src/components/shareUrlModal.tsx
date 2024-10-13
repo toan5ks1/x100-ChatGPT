@@ -19,7 +19,7 @@ export function DialogSharedURL({ isOpen, setIsOpen, onContinue, url = hostUrl }
       <div className="flex flex-col bg-zinc-800 gap-4 p-6 rounded-lg shadow-lg w-full max-w-sm">
         <div className="flex flex-col space-y-1.5 text-center sm:text-left">
           <h2 className="text-lg font-semibold leading-none tracking-tight">
-            You've hit the free plan limit for GPT-4o
+            You've hit the free Plan limit for GPT-4o.
           </h2>
           <p className="text-sm text-muted-foreground">Don't worry, you can still use it for free!</p>
         </div>

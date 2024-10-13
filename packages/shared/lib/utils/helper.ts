@@ -79,7 +79,7 @@ export async function checkHitLimit(header: Headers) {
 
     return data?.banner_info === null ? false : true;
   } catch (error) {
-    console.error('Error making the request:', error);
+    console.log('Error making the request:', error);
     return null;
   }
 }
@@ -87,16 +87,12 @@ export async function checkHitLimit(header: Headers) {
 export async function onContinueChat(shareId: string) {
   try {
     const url = `${hostUrl}/share/${shareId}/continue?_data=routes%2Fshare.%24shareId.%28%24action%29`;
-    const response = await fetch(url, {
-      method: 'GET', // or "POST", "PUT", etc. depending on your use case
-      // headers: header,
-      // body: JSON.stringify({ data: 'routes/share.$shareId.($action)' }),
-    });
+    const response = await fetch(url);
     const data = await response.json();
     window.location.href = `${hostUrl}/share/${shareId}/continue`;
     return data;
   } catch (error) {
-    console.error('Error making the request:', error);
+    console.log('Error making the request:', error);
     return null;
   }
 }

@@ -22,7 +22,11 @@ export function parseJwt(token: string) {
   return JSON.parse(jsonPayload);
 }
 
-export function getEmailFromAuthHeader(authHeaderValue: string) {
+export function getEmailFromAuthHeader(authHeaderValue?: string) {
+  if (!authHeaderValue) {
+    return null;
+  }
+
   const token = authHeaderValue.split(' ')[1];
 
   const decodedToken = parseJwt(token);
@@ -38,20 +42,12 @@ export function removeReadOnlyProperties(cookieData: any) {
   return { ...cleanedCookie, url: hostUrl };
 }
 
-export function minutesBetweenDates(date1: Date, date2: Date): number {
-  // Convert the dates to milliseconds
-  const millisecondsBetween = date2.getTime() - date1.getTime();
+export function findAvailableSlot(slots: Slot[], id?: string) {
+  const index = slots.findIndex(slot => slot.id === id);
 
-  // Convert milliseconds to minutes
-  const minutesBetween = millisecondsBetween / (1000 * 60);
-
-  return minutesBetween;
-}
-
-export function findAvailableSlot(slots: Slot[]) {
-  return slots.find(slot => minutesBetweenDates(slot.data.expTime, new Date()) > 10);
-}
-
-export function findCurrentSlot(slots: Slot[]) {
-  return slots.find(slot => slot.data.isSelected);
+  if (index === -1 || index === slots.length - 1) {
+    return slots[0];
+  } else {
+    return slots[index + 1];
+  }
 }

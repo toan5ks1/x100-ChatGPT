@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react';
 import { tokenStorage } from '@extension/storage';
 import { checkHitLimit, createHeader, onContinueChat, type ShareChat, shareChat } from '@extension/shared';
 import { handleAutoSelectSlot } from './lib/utils';
+import useUrlChange from './hooks/useUrlChange';
 
 const handleRedirect = async (shareUrl?: string) => {
   shareUrl &&
@@ -51,7 +52,6 @@ export default function App() {
   const [isOpenSharedModal, setIsOpenSharedModal] = useState(false);
 
   const checkLimitAutoShare = async () => {
-    console.log('check');
     const bearerToken = await tokenStorage.get();
     const header = createHeader(bearerToken?.token);
 
@@ -71,6 +71,11 @@ export default function App() {
       }
     }
   };
+  useUrlChange(checkLimitAutoShare);
+
+  useEffect(() => {
+    checkLimitAutoShare();
+  }, [messageCount]);
 
   useEffect(() => {
     const cleanup = addConversationListener(() => setMessageCount(pre => pre + 1));
@@ -80,14 +85,6 @@ export default function App() {
 
     return cleanup;
   }, []);
-
-  useEffect(() => {
-    checkLimitAutoShare();
-  }, [location]);
-
-  useEffect(() => {
-    checkLimitAutoShare();
-  }, [messageCount]);
 
   return (
     <>

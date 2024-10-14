@@ -14,11 +14,11 @@ function removeCookie(onRemoved: () => void) {
   removing.then(onRemoved, onError);
 }
 
-const AddProfileBtn = () => {
-  const addNewSlot = () => {
-    window.open(hostUrl, '_blank', 'noopener,noreferrer');
-  };
+const addNewSlot = () => {
+  window.open(hostUrl, '_blank', 'noopener,noreferrer');
+};
 
+const AddProfileBtn = () => {
   return (
     <Button
       className="flex items-center gap-1 border border-zinc-500 rounded-md px-2 py-1"

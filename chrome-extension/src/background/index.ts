@@ -103,8 +103,6 @@ chrome.webRequest.onSendHeaders.addListener(
 
       await tokenStorage.set({ token });
       await SlotStorage.addSlot({ id: email, data: cookie });
-      // Send response to client
-      activePort && sendResponseWithPort(activePort, { type: 'AddNewSlot', data: 'success' });
     }
   },
   { urls: [loginURL] },

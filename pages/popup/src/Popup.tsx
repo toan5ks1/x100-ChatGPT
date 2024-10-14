@@ -13,14 +13,13 @@ const Popup = () => {
   return (
     <div
       className={cn(
-        'w-80 h-96 px-4 py-6 space-y-6',
+        'w-80 h-full min-h-96 px-4 py-8 space-y-8',
         isLight ? 'bg-neutral-50 text-neutral-900' : 'bg-neutral-800 text-neutral-100',
       )}>
-      <div className="flex justify-between items-center">
-        <RocketIcon className="size-5 text-orange-500" />
-        {/* <img src={chrome.runtime.getURL('popup/logo.png')} className="w-16 h-auto" alt="logo" /> */}
-        <h2 className="text-lg font-semibold">Unlimited ChatGPT</h2>
-        <ModeToggle />
+      <div className="flex justify-center items-center space-x-1 relative">
+        <RocketIcon className="size-6 text-orange-500" />
+        <h2 className="text-lg font-semibold">SorryGPT-4o</h2>
+        <ModeToggle className="absolute top-0 right-0" />
       </div>
       <AccountListPage />
       <AddProfileBtn />

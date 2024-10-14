@@ -1,5 +1,5 @@
 import { DialogSharedURL } from './components/shareUrlModal';
-import { useCallback, useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { tokenStorage } from '@extension/storage';
 import { checkHitLimit, createHeader, onContinueChat, type ShareChat, shareChat } from '@extension/shared';
 import { handleAutoSelectSlot } from './lib/utils';
@@ -17,25 +17,41 @@ const getShareIdFromShareUrl = () => {
   return !href.includes('/continue') ? href.split('/share/')?.[1] : null;
 };
 
+const addConversationListener = (updateCount: () => void) => {
+  const port = chrome.runtime.connect();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const messageListener = (message: any) => {
+    switch (message.type) {
+      case 'MessageSent':
+        console.log('Received message: MessageSent');
+        updateCount();
+        break;
+      default:
+        console.log('Unknown message type:', message.type);
+    }
+  };
+
+  port.onMessage.addListener(messageListener);
+
+  port.onDisconnect.addListener(() => {
+    console.log('Port disconnected');
+  });
+
+  // Return a cleanup function
+  return () => {
+    port.onMessage.removeListener(messageListener); // Clean up the listener
+    port.disconnect(); // Disconnect the port
+  };
+};
+
 export default function App() {
   const [sharedData, setSharedData] = useState<ShareChat>({});
   const [messageCount, setMessageCount] = useState(0);
   const [isOpenSharedModal, setIsOpenSharedModal] = useState(false);
 
-  // const addConversationListener = () => {
-  //   chrome.runtime.onConnect.addListener(function (port) {
-  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //     port.onMessage.addListener((responseMessage: any) => {
-  //       if (responseMessage.type === 'MessageSent') {
-  //         console.log('message received..');
-  //         setMessageCount(pre => pre + 1);
-  //       }
-  //     });
-  //   });
-  //   console.log('added listener');
-  // };
-
-  const checkLimitAutoShare = useCallback(async () => {
+  const checkLimitAutoShare = async () => {
+    console.log('check');
     const bearerToken = await tokenStorage.get();
     const header = createHeader(bearerToken?.token);
 
@@ -54,19 +70,23 @@ export default function App() {
         }
       }
     }
-  }, []);
+  };
 
   useEffect(() => {
-    // addConversationListener();
-    checkLimitAutoShare();
+    const cleanup = addConversationListener(() => setMessageCount(pre => pre + 1));
 
     const shareId = getShareIdFromShareUrl();
     shareId && onContinueChat(shareId);
+
+    return cleanup;
   }, []);
 
   useEffect(() => {
-    // checkLimitAsync();
-    console.log(messageCount);
+    checkLimitAutoShare();
+  }, [location]);
+
+  useEffect(() => {
+    checkLimitAutoShare();
   }, [messageCount]);
 
   return (

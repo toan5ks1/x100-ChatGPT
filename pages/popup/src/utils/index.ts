@@ -7,6 +7,7 @@ import {
   getCurrentNodeId,
   createShareURL,
   activeShareURL,
+  hostUrl,
 } from '@extension/shared';
 
 export const handleDeleteSlot = (id: string) => {
@@ -68,28 +69,45 @@ export async function getCurrentURL() {
   });
 }
 
-export async function shareChatInBg() {
+export async function getSwitchURL() {
+  const currentURL = await getCurrentURL();
+
+  if (typeof currentURL !== 'string') {
+    return hostUrl;
+  }
+
+  const isShareURL = currentURL.includes('/share/');
+
+  return isShareURL ? currentURL : hostUrl;
+}
+
+export async function shareChatInBg(): Promise<{ success: boolean; msg: string; shareId?: string; shareUrl?: string }> {
   const currentURL = await getCurrentURL();
   const conversationId = typeof currentURL === 'string' ? getConversationIdByURL(currentURL) : null;
+
+  if (!conversationId) {
+    return { success: false, msg: 'ConversationId not found!' };
+  }
+
   const bearerToken = await tokenStorage.get();
   const header = createHeader(bearerToken?.token);
 
-  if (header && conversationId) {
-    try {
-      const currentNodeId = await getCurrentNodeId(conversationId, header);
-      const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
+  if (!header) {
+    return { success: false, msg: 'Token not found!' };
+  }
 
-      const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;
+  try {
+    const currentNodeId = await getCurrentNodeId(conversationId, header);
+    const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
 
-      if (isActivatedSuccess) {
-        return { success: true, msg: 'success', ...shareData };
-      }
+    const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;
 
-      return { success: false, msg: 'Cannot share the current chat! Please try again later!' };
-    } catch (err) {
-      return { success: false, msg: 'Something went wrong! try share chat again' };
+    if (isActivatedSuccess) {
+      return { success: true, msg: 'success', ...shareData };
     }
-  } else {
-    return { success: false, msg: 'Token or conversationId not found!' };
+
+    return { success: false, msg: 'Cannot share the current chat! Please try again later!' };
+  } catch (err) {
+    return { success: false, msg: 'Something went wrong! try share chat again' };
   }
 }

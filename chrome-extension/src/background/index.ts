@@ -2,11 +2,10 @@ import Logger from './utils/logger';
 import { loginURL } from './utils/constant';
 import { sendErrorMessageToClient, sendMessageToClient } from './utils/message';
 import { type RequiredDataNullableInput } from './utils/type';
-import { exhaustiveMatchingGuard, getEmailFromAuthHeader, removeReadOnlyProperties } from './utils';
+import { exhaustiveMatchingGuard, findAvailableSlot, getEmailFromAuthHeader, removeReadOnlyProperties } from './utils';
 import { type Message } from '@extension/storage/types';
-import { cookieName, hostUrl } from '@extension/shared/index';
-import { SlotStorage } from '@extension/storage';
-
+import { cookieName, hostUrl, conversationUrl } from '@extension/shared/index';
+import { SlotStorage, tokenStorage } from '@extension/storage';
 let activePort: chrome.runtime.Port | null = null; // Global variable to store the active port
 
 const sendResponseWithPort = <M extends Message>(port: chrome.runtime.Port, message: RequiredDataNullableInput<M>) => {
@@ -39,11 +38,43 @@ chrome.runtime.onConnect.addListener(port => {
         }
         case 'SelectSlot': {
           const selectedSlot = await SlotStorage.getSlotById(message.input);
-          await SlotStorage.updateSlot({ ...selectedSlot, isSelected: true });
           chrome.cookies.set(removeReadOnlyProperties(selectedSlot.data), () => {
             console.log('set cookie successully');
           });
           sendResponse({ type: 'SelectSlot', data: 'success' });
+          break;
+        }
+        case 'UpdateSlot': {
+          await SlotStorage.updateSlot(message.input);
+          sendResponse({ type: 'UpdateSlot', data: 'success' });
+          break;
+        }
+        case 'UpdateSlotById': {
+          const selectedSlot = await SlotStorage.getSlotById(message.input.id);
+          await SlotStorage.updateSlot({ ...selectedSlot, ...message.input });
+          sendResponse({ type: 'UpdateSlotById', data: 'success' });
+          break;
+        }
+        case 'AutoSelectSlot': {
+          const slots = await SlotStorage.getAllSlots();
+          const token = await tokenStorage.get();
+          const email = getEmailFromAuthHeader(token?.token); // email equal Id
+          const availableSlot = findAvailableSlot(slots, email);
+
+          if (availableSlot) {
+            chrome.cookies.set(removeReadOnlyProperties(availableSlot.data), () => {
+              console.log('set cookie successully');
+            });
+          }
+
+          sendResponse({ type: 'AutoSelectSlot', data: availableSlot ?? 'failed' });
+          break;
+        }
+        case 'GetCurrentSlot': {
+          const token = await tokenStorage.get();
+          const email = getEmailFromAuthHeader(token?.token);
+          sendResponse({ type: 'GetCurrentSlot', data: email ?? 'failed' });
+
           break;
         }
         case 'DeleteSlot': {
@@ -65,15 +96,27 @@ chrome.runtime.onConnect.addListener(port => {
 chrome.webRequest.onSendHeaders.addListener(
   async details => {
     const authHeader = details.requestHeaders?.find(header => header.name.toLowerCase() === 'authorization');
-    if (authHeader?.value && authHeader.value.startsWith('Bearer')) {
-      const email = getEmailFromAuthHeader(authHeader.value);
+    const token = authHeader?.value;
+    if (token && token.startsWith('Bearer')) {
+      const email = getEmailFromAuthHeader(token);
       const cookie = await chrome.cookies.get({ url: hostUrl, name: cookieName });
 
+      await tokenStorage.set({ token });
       await SlotStorage.addSlot({ id: email, data: cookie });
       // Send response to client
       activePort && sendResponseWithPort(activePort, { type: 'AddNewSlot', data: 'success' });
     }
   },
-  { urls: [loginURL] }, // Adjust for specific domains if needed
+  { urls: [loginURL] },
   ['requestHeaders', 'extraHeaders'],
+);
+
+chrome.webRequest.onCompleted.addListener(
+  async details => {
+    if (details) {
+      // Send response to client to notice that the limit is hit
+      activePort && sendResponseWithPort(activePort, { type: 'MessageSent', data: 'success' });
+    }
+  },
+  { urls: [conversationUrl] },
 );

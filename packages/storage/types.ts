@@ -1,40 +1,51 @@
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type Slot = { id: string; data: any; isSelected: boolean };
+export type Slot = { id: string; data: any; expTime?: Date };
+export type ActionResult = 'success' | 'failed';
 
 type AddNewSlot = {
   type: 'AddNewSlot';
   input: Slot;
-  data?: 'success';
+  data?: ActionResult;
 };
 type SelectSlot = {
   type: 'SelectSlot';
   input: string;
-  data?: 'success';
+  data?: ActionResult;
 };
 type UpdateSlot = {
   type: 'UpdateSlot';
   input: Slot;
-  data?: 'success';
+  data?: ActionResult;
+};
+type UpdateSlotById = {
+  type: 'UpdateSlotById';
+  input: Omit<Slot, 'data'>;
+  data?: ActionResult;
 };
 type DeleteSlot = {
   type: 'DeleteSlot';
   input: string;
-  data?: 'success';
+  data?: ActionResult;
 };
-type ResetAPIKey = {
-  type: 'ResetAPIKey';
+type MessageSent = {
+  type: 'MessageSent';
   input?: never;
-  data?: 'success';
+  data?: ActionResult;
 };
-type GetAPIKey = {
-  type: 'GetAPIKey';
+type AutoSelectSlot = {
+  type: 'AutoSelectSlot';
   input?: never;
-  data?: string;
+  data?: Slot;
 };
 type GetSlots = {
   type: 'GetSlots';
   input?: never;
   data?: Slot[];
+};
+type GetCurrentSlot = {
+  type: 'GetCurrentSlot';
+  input?: never;
+  data?: Slot['id'];
 };
 export type ErrorMessage = {
   type: 'Error';
@@ -42,7 +53,16 @@ export type ErrorMessage = {
   error: Error;
 };
 
-export type Message = AddNewSlot | UpdateSlot | GetSlots | GetAPIKey | ResetAPIKey | SelectSlot | DeleteSlot;
+export type Message =
+  | AddNewSlot
+  | UpdateSlot
+  | UpdateSlotById
+  | GetSlots
+  | GetCurrentSlot
+  | SelectSlot
+  | DeleteSlot
+  | MessageSent
+  | AutoSelectSlot;
 
 export type RequestMessage<M = Message> = Omit<M, 'data'>;
 export type ResponseMessage<M = Message> = Omit<M, 'input' | 'error'>;

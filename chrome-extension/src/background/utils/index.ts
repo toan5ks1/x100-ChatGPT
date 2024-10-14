@@ -1,5 +1,6 @@
 import { hostUrl } from '@extension/shared';
 import { profileKey } from './constant';
+import { type Slot } from '@extension/storage/types';
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/no-explicit-any
 export function exhaustiveMatchingGuard(_: any) {
@@ -21,7 +22,11 @@ export function parseJwt(token: string) {
   return JSON.parse(jsonPayload);
 }
 
-export function getEmailFromAuthHeader(authHeaderValue: string) {
+export function getEmailFromAuthHeader(authHeaderValue?: string) {
+  if (!authHeaderValue) {
+    return null;
+  }
+
   const token = authHeaderValue.split(' ')[1];
 
   const decodedToken = parseJwt(token);
@@ -35,4 +40,14 @@ export function removeReadOnlyProperties(cookieData: any) {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { hostOnly, session, storeId, ...cleanedCookie } = cookieData;
   return { ...cleanedCookie, url: hostUrl };
+}
+
+export function findAvailableSlot(slots: Slot[], id?: string) {
+  const index = slots.findIndex(slot => slot.id === id);
+
+  if (index === -1 || index === slots.length - 1) {
+    return slots[0];
+  } else {
+    return slots[index + 1];
+  }
 }

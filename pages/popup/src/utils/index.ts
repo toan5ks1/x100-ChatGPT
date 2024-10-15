@@ -58,10 +58,10 @@ export async function redirectCurrentTab(newUrl: string) {
 }
 
 export async function getCurrentURL() {
-  return new Promise((resolve, reject) => {
+  return new Promise(resolve => {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (chrome.runtime.lastError) {
-        reject(null); // Reject the promise if there's an error
+        resolve(null); // Reject the promise if there's an error
       } else {
         resolve(tabs[0].url); // Resolve the promise with the active tab's URL
       }

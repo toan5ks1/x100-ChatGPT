@@ -3,7 +3,6 @@ import { exampleThemeStorage } from '@extension/storage';
 import AccountListPage from './components/AccountList';
 import { cn } from '@extension/ui/lib/utils';
 import AddProfileBtn from './components/AddProfileBtn';
-import { RocketIcon } from '@extension/ui/components/icon';
 import { ModeToggle } from './components/ToggleTheme';
 
 const Popup = () => {
@@ -17,7 +16,7 @@ const Popup = () => {
         isLight ? 'bg-neutral-50 text-neutral-900' : 'bg-neutral-800 text-neutral-100',
       )}>
       <div className="flex justify-center items-center space-x-1 relative">
-        <RocketIcon className="size-6 text-orange-500" />
+        <img src={isLight ? './logo.png' : './logo-dark.png'} className="size-6" alt="logo" />
         <h2 className="text-lg font-semibold">SorryGPT-4o</h2>
         <ModeToggle className="absolute top-0 right-0" />
       </div>

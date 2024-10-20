@@ -1,4 +1,5 @@
 import { Button } from '@extension/ui/components/button';
+import { TooltipProvider, Tooltip, TooltipTrigger, TooltipContent } from '@extension/ui/components/tooltip';
 import { TrashIcon, EnterIcon, Share2Icon, Icons } from '@extension/ui/components/icon';
 import { useGetAllSlots } from '../hooks/useAllSlots';
 import { handleDeleteSlot } from '@src/utils';
@@ -16,19 +17,53 @@ export default function AccountListPage() {
       {slots.map(slot => (
         <li key={slot.id} className="flex justify-between items-center">
           <span className="w-1/3 truncate">{slot.id.split('@')[0]}</span>
-          <Button size="icon" onClick={() => switchAccount(slot.id)}>
-            {isPending && selectedId === slot.id ? <Icons.spinner className="size-4 animate-spin" /> : <EnterIcon />}
-          </Button>
-          <Button size="icon" onClick={() => shareChat(slot.id)}>
-            {isPendingShare && selectedIdShare === slot.id ? (
-              <Icons.spinner className="size-4 animate-spin" />
-            ) : (
-              <Share2Icon />
-            )}
-          </Button>
-          <Button size="icon" onClick={() => handleDeleteSlot(slot.id)}>
-            <TrashIcon className="text-red-500" />
-          </Button>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => switchAccount(slot.id)}>
+                  {isPending && selectedId === slot.id ? (
+                    <Icons.spinner className="size-4 animate-spin" />
+                  ) : (
+                    <EnterIcon />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-zinc-500 border border-zinc-700 px-2 py-1 text-white">
+                <p>Switch to {slot.id.split('@')[0]}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => shareChat(slot.id)}>
+                  {isPendingShare && selectedIdShare === slot.id ? (
+                    <Icons.spinner className="size-4 animate-spin" />
+                  ) : (
+                    <Share2Icon />
+                  )}
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-zinc-500 border border-zinc-700 px-2 py-1 text-white">
+                <p>Continue chatting with {slot.id.split('@')[0]}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button size="icon" onClick={() => handleDeleteSlot(slot.id)}>
+                  <TrashIcon className="text-red-500" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent className="bg-zinc-500 border border-zinc-700 px-2 py-1 text-white">
+                <p>Delete {slot.id.split('@')[0]}</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
         </li>
       ))}
     </ul>

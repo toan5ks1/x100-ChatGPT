@@ -5,3 +5,4 @@ export const createShareUrl = 'https://chatgpt.com/backend-api/share';
 export const litmitChatUrl = 'https://chatgpt.com/backend-api/conversation/init';
 
 export const cookieName = '__Secure-next-auth.session-token';
+export const profileKey = 'https://api.openai.com/profile';

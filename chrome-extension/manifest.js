@@ -19,13 +19,9 @@ const sidePanelConfig = {
 const manifest = deepmerge(
   {
     manifest_version: 3,
-    /**
-     * if you want to support multiple languages, you can use the following reference
-     * https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/Internationalization
-     */
-    name: '__MSG_extensionName__',
+    name: 'SorryGPT-4o',
     version: packageJson.version,
-    description: '__MSG_extensionDescription__',
+    description: `The ultimate Chrome extension designed to give you free access to GPT-4o, the latest and most powerful AI model by OpenAI.`,
     host_permissions: ['<all_urls>'],
     permissions: ['storage', 'scripting', 'tabs', 'activeTab', 'notifications', 'cookies', 'webRequest'],
     options_page: 'options/index.html',
@@ -42,11 +38,11 @@ const manifest = deepmerge(
     },
     content_scripts: [
       {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+        matches: ['*://chatgpt.com/*'],
         js: ['content-ui/index.iife.js'],
       },
       {
-        matches: ['http://*/*', 'https://*/*', '<all_urls>'],
+        matches: ['*://chatgpt.com/*'],
         css: ['content.css'], // public folder
       },
     ],

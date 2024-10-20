@@ -55,7 +55,7 @@ type UrlChanged = {
 };
 type AutoSelectSlot = {
   type: 'AutoSelectSlot';
-  input?: never;
+  input?: string;
   data?: Slot;
 };
 type GetSlots = {

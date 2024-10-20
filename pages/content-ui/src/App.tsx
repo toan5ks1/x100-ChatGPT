@@ -1,7 +1,7 @@
 import { DialogSharedURL } from './components/shareUrlModal';
 import { useEffect, useState } from 'react';
-import { checkHitLimit, createHeader } from '@extension/shared';
-import { continueChat, getHeader } from './lib/utils';
+import { checkHitLimit, createHeader, getHeader } from '@extension/shared';
+import { continueChat } from './lib/utils';
 
 export default function App() {
   const [isOpenSharedModal, setIsOpenSharedModal] = useState(false);

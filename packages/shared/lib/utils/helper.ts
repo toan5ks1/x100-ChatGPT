@@ -1,3 +1,4 @@
+import { tokenStorage } from '@extension/storage';
 import { conversationUrl, createShareUrl, litmitChatUrl, profileKey } from './constant';
 
 export function getConversationIdByURL(url: string = window.location.href) {
@@ -190,3 +191,7 @@ export function getEmailFromAuthHeader(authHeaderValue?: string) {
 
   return email;
 }
+
+export const getHeader = async () => {
+  return tokenStorage.get().then(bearerToken => bearerToken?.token);
+};

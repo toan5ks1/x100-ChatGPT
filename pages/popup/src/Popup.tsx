@@ -2,7 +2,6 @@ import { useStorage, withErrorBoundary, withSuspense } from '@extension/shared';
 import { exampleThemeStorage } from '@extension/storage';
 import AccountListPage from './components/AccountList';
 import { cn } from '@extension/ui/lib/utils';
-import AddProfileBtn from './components/AddProfileBtn';
 import { ModeToggle } from './components/ToggleTheme';
 
 const Popup = () => {
@@ -21,7 +20,6 @@ const Popup = () => {
         <ModeToggle className="absolute top-0 right-0" />
       </div>
       <AccountListPage />
-      <AddProfileBtn />
     </div>
   );
 };

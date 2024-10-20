@@ -1,6 +1,5 @@
 import { type Slot } from '@extension/storage/types';
 import { sendMessageToBackground } from '@extension/storage/lib/service/message';
-import { tokenStorage } from '@extension/storage';
 
 export const handleUpdateSlot = (slot: Slot, callback?: () => void) => {
   sendMessageToBackground({
@@ -67,10 +66,6 @@ export const handleRedirect = async (currendId: string, shareUrl: string) => {
   handleAutoSelectSlot(currendId, () => {
     window.location.replace(shareUrl);
   });
-};
-
-export const getHeader = async () => {
-  return tokenStorage.get().then(bearerToken => bearerToken?.token);
 };
 
 export const addConversationListener = (updateCount: () => void) => {

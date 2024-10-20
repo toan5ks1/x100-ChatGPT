@@ -1,5 +1,18 @@
 import { sendMessageToBackground } from '@extension/storage/lib/service/message';
 import { type RedirectWithId } from '@extension/storage/types';
+import { cookieName, hostUrl } from '@extension/shared/index';
+
+function onError(error: unknown) {
+  console.log(`Error removing cookie: ${error}`);
+}
+
+export function removeCookie(onRemoved: () => void) {
+  const removing = chrome.cookies.remove({
+    url: hostUrl,
+    name: cookieName,
+  });
+  removing.then(onRemoved, onError);
+}
 
 export const handleDeleteSlot = (id: string) => {
   sendMessageToBackground({

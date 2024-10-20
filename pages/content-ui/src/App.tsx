@@ -1,44 +1,40 @@
 import { DialogSharedURL } from './components/shareUrlModal';
 import { useEffect, useState } from 'react';
 import { tokenStorage } from '@extension/storage';
-import { checkHitLimit, createHeader, onContinueChat, type ShareChat, shareChat } from '@extension/shared';
-import { getShareUrlFromHref, handleAutoSelectSlot } from './lib/utils';
-import useUrlChange from './hooks/useUrlChange';
+import { checkHitLimit, createHeader, type ShareChat, shareChat } from '@extension/shared';
+import { continueChat, handleRedirect } from './lib/utils';
 
-const handleRedirect = async (shareUrl?: string) => {
-  shareUrl &&
-    handleAutoSelectSlot(() => {
-      window.location.href = shareUrl;
-    });
+const addConversationListener = (updateCount: () => void) => {
+  const port = chrome.runtime.connect();
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const messageListener = (message: any) => {
+    switch (message.type) {
+      case 'MessageSent':
+        console.log('Received message: MessageSent');
+        updateCount();
+        break;
+      case 'UrlChanged':
+        console.log('Received message: UrlChanged');
+        updateCount();
+        break;
+      default:
+        console.log('Unknown message type:', message.type);
+    }
+  };
+
+  port.onMessage.addListener(messageListener);
+
+  port.onDisconnect.addListener(() => {
+    console.log('Port disconnected');
+  });
+
+  // Return a cleanup function
+  return () => {
+    port.onMessage.removeListener(messageListener); // Clean up the listener
+    port.disconnect(); // Disconnect the port
+  };
 };
-
-// const addConversationListener = (updateCount: () => void) => {
-//   const port = chrome.runtime.connect();
-
-//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-//   const messageListener = (message: any) => {
-//     switch (message.type) {
-//       case 'MessageSent':
-//         console.log('Received message: MessageSent');
-//         updateCount();
-//         break;
-//       default:
-//         console.log('Unknown message type:', message.type);
-//     }
-//   };
-
-//   port.onMessage.addListener(messageListener);
-
-//   port.onDisconnect.addListener(() => {
-//     console.log('Port disconnected');
-//   });
-
-//   // Return a cleanup function
-//   return () => {
-//     port.onMessage.removeListener(messageListener); // Clean up the listener
-//     port.disconnect(); // Disconnect the port
-//   };
-// };
 
 export default function App() {
   const [sharedData, setSharedData] = useState<ShareChat>({});
@@ -56,8 +52,8 @@ export default function App() {
         const shareData = await shareChat(header);
 
         if (shareData.success) {
-          setSharedData(shareData);
           setIsOpenSharedModal(true);
+          setSharedData(shareData);
         } else {
           // alert(shareData.msg ?? 'Share chat failed!');
           console.log(shareData.msg ?? 'Share chat failed!');
@@ -65,35 +61,36 @@ export default function App() {
       }
     }
   };
-  // useUrlChange(checkLimitAutoShare);
-  // useEffect(() => {
-  //   checkLimitAutoShare();
-  // }, [messageCount]);
 
   useEffect(() => {
-    // const cleanup = addConversationListener(() => setMessageCount(pre => pre + 1));
+    checkLimitAutoShare();
+  }, [messageCount]);
 
-    const shareUrl = getShareUrlFromHref();
+  useEffect(() => {
+    console.log(isOpenSharedModal);
+  }, [isOpenSharedModal]);
 
-    if (shareUrl) {
-      onContinueChat(shareUrl).then(continueUrl => {
-        if (continueUrl) {
-          window.location.href = continueUrl;
-          alert(continueUrl);
-        }
-      });
-    }
+  useEffect(() => {
+    continueChat();
 
-    // return cleanup;
+    const cleanup = addConversationListener(() => setMessageCount(pre => pre + 1));
+
+    return cleanup;
   }, []);
 
   return (
-    // <DialogSharedURL
-    //   isOpen={isOpenSharedModal}
-    //   setIsOpen={setIsOpenSharedModal}
-    //   url={sharedData.shareUrl}
-    //   onContinue={() => handleRedirect(sharedData.shareUrl)}
-    // />
-    <></>
+    <>
+      <DialogSharedURL
+        isOpen={isOpenSharedModal}
+        setIsOpen={setIsOpenSharedModal}
+        url={sharedData.shareUrl}
+        onContinue={() => handleRedirect(sharedData.shareUrl)}
+      />
+      {/* <div className="flex items-center justify-between gap-2 rounded bg-blue-100 px-2 py-1">
+        <div className="flex gap-1 text-blue-500">
+          Edit <strong className="text-blue-700">pages/content-ui/src/app.tsx</strong> and save to reload.
+        </div>
+      </div> */}
+    </>
   );
 }

@@ -48,6 +48,11 @@ type MessageSent = {
   input?: never;
   data?: ActionResult;
 };
+type UrlChanged = {
+  type: 'UrlChanged';
+  input?: never;
+  data?: ActionResult;
+};
 type AutoSelectSlot = {
   type: 'AutoSelectSlot';
   input?: never;
@@ -80,6 +85,7 @@ export type Message =
   | ShareChatRedirect
   | DeleteSlot
   | MessageSent
+  | UrlChanged
   | AutoSelectSlot;
 
 export type RequestMessage<M = Message> = Omit<M, 'data'>;

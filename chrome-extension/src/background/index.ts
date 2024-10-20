@@ -10,7 +10,7 @@ import {
   shareChatInBg,
 } from './utils';
 import { type Message } from '@extension/storage/types';
-import { cookieName, hostUrl, conversationUrl, redirectCurrentTab } from '@extension/shared/index';
+import { cookieName, hostUrl, conversationUrl, redirectCurrentTab, chatUrlPrefix } from '@extension/shared/index';
 import { SlotStorage, tokenStorage } from '@extension/storage';
 let activePort: chrome.runtime.Port | null = null; // Global variable to store the active port
 
@@ -145,10 +145,18 @@ chrome.webRequest.onSendHeaders.addListener(
 
 chrome.webRequest.onCompleted.addListener(
   async details => {
-    if (details) {
+    if (details?.url) {
       // Send response to client to notice that the limit is hit
       activePort && sendResponseWithPort(activePort, { type: 'MessageSent', data: 'success' });
     }
   },
   { urls: [conversationUrl] },
 );
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // Check if the URL is fully loaded and matches the desired pattern
+  if (changeInfo.status === 'complete' && tab.url && tab.url.startsWith(chatUrlPrefix)) {
+    // Send response to client to notify that the URL has changed
+    activePort && sendResponseWithPort(activePort, { type: 'UrlChanged', data: 'success' });
+  }
+});

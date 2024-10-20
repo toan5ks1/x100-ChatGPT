@@ -6,7 +6,7 @@ const useUrlChange = (onUrlChange: (newUrl: string) => void) => {
   useEffect(() => {
     // Effect to run when currentUrl changes
     onUrlChange(currentUrl);
-  }, [currentUrl, onUrlChange]); // Add currentUrl and onUrlChange to dependency array
+  }, [currentUrl]); // Add currentUrl and onUrlChange to dependency array
 
   useEffect(() => {
     let lastUrl = window.location.href;

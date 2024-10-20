@@ -2,7 +2,7 @@ import { DialogSharedURL } from './components/shareUrlModal';
 import { useEffect, useState } from 'react';
 import { tokenStorage } from '@extension/storage';
 import { checkHitLimit, createHeader, onContinueChat, type ShareChat, shareChat } from '@extension/shared';
-import { handleAutoSelectSlot } from './lib/utils';
+import { getShareUrlFromHref, handleAutoSelectSlot } from './lib/utils';
 import useUrlChange from './hooks/useUrlChange';
 
 const handleRedirect = async (shareUrl?: string) => {
@@ -12,39 +12,33 @@ const handleRedirect = async (shareUrl?: string) => {
     });
 };
 
-const getShareIdFromShareUrl = () => {
-  const href = window.location.href;
+// const addConversationListener = (updateCount: () => void) => {
+//   const port = chrome.runtime.connect();
 
-  return !href.includes('/continue') ? href.split('/share/')?.[1] : null;
-};
+//   // eslint-disable-next-line @typescript-eslint/no-explicit-any
+//   const messageListener = (message: any) => {
+//     switch (message.type) {
+//       case 'MessageSent':
+//         console.log('Received message: MessageSent');
+//         updateCount();
+//         break;
+//       default:
+//         console.log('Unknown message type:', message.type);
+//     }
+//   };
 
-const addConversationListener = (updateCount: () => void) => {
-  const port = chrome.runtime.connect();
+//   port.onMessage.addListener(messageListener);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const messageListener = (message: any) => {
-    switch (message.type) {
-      case 'MessageSent':
-        console.log('Received message: MessageSent');
-        updateCount();
-        break;
-      default:
-        console.log('Unknown message type:', message.type);
-    }
-  };
+//   port.onDisconnect.addListener(() => {
+//     console.log('Port disconnected');
+//   });
 
-  port.onMessage.addListener(messageListener);
-
-  port.onDisconnect.addListener(() => {
-    console.log('Port disconnected');
-  });
-
-  // Return a cleanup function
-  return () => {
-    port.onMessage.removeListener(messageListener); // Clean up the listener
-    port.disconnect(); // Disconnect the port
-  };
-};
+//   // Return a cleanup function
+//   return () => {
+//     port.onMessage.removeListener(messageListener); // Clean up the listener
+//     port.disconnect(); // Disconnect the port
+//   };
+// };
 
 export default function App() {
   const [sharedData, setSharedData] = useState<ShareChat>({});
@@ -71,29 +65,35 @@ export default function App() {
       }
     }
   };
-  useUrlChange(checkLimitAutoShare);
+  // useUrlChange(checkLimitAutoShare);
+  // useEffect(() => {
+  //   checkLimitAutoShare();
+  // }, [messageCount]);
 
   useEffect(() => {
-    checkLimitAutoShare();
-  }, [messageCount]);
+    // const cleanup = addConversationListener(() => setMessageCount(pre => pre + 1));
 
-  useEffect(() => {
-    const cleanup = addConversationListener(() => setMessageCount(pre => pre + 1));
+    const shareUrl = getShareUrlFromHref();
 
-    const shareId = getShareIdFromShareUrl();
-    shareId && onContinueChat(shareId);
+    if (shareUrl) {
+      onContinueChat(shareUrl).then(continueUrl => {
+        if (continueUrl) {
+          window.location.href = continueUrl;
+          alert(continueUrl);
+        }
+      });
+    }
 
-    return cleanup;
+    // return cleanup;
   }, []);
 
   return (
-    <>
-      <DialogSharedURL
-        isOpen={isOpenSharedModal}
-        setIsOpen={setIsOpenSharedModal}
-        url={sharedData.shareUrl}
-        onContinue={() => handleRedirect(sharedData.shareUrl)}
-      />
-    </>
+    // <DialogSharedURL
+    //   isOpen={isOpenSharedModal}
+    //   setIsOpen={setIsOpenSharedModal}
+    //   url={sharedData.shareUrl}
+    //   onContinue={() => handleRedirect(sharedData.shareUrl)}
+    // />
+    <></>
   );
 }

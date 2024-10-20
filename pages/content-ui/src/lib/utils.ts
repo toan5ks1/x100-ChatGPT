@@ -36,3 +36,9 @@ export const handleAutoSelectSlot = (callback?: () => void) => {
     },
   });
 };
+
+export const getShareUrlFromHref = () => {
+  const href = window.location.href;
+
+  return href.includes('/share/') && !href.includes('/continue') ? href : null;
+};

@@ -2,9 +2,15 @@ import Logger from './utils/logger';
 import { loginURL } from './utils/constant';
 import { sendErrorMessageToClient, sendMessageToClient } from './utils/message';
 import { type RequiredDataNullableInput } from './utils/type';
-import { exhaustiveMatchingGuard, findAvailableSlot, getEmailFromAuthHeader, removeReadOnlyProperties } from './utils';
+import {
+  exhaustiveMatchingGuard,
+  findAvailableSlot,
+  getEmailFromAuthHeader,
+  removeReadOnlyProperties,
+  shareChatInBg,
+} from './utils';
 import { type Message } from '@extension/storage/types';
-import { cookieName, hostUrl, conversationUrl } from '@extension/shared/index';
+import { cookieName, hostUrl, conversationUrl, redirectCurrentTab } from '@extension/shared/index';
 import { SlotStorage, tokenStorage } from '@extension/storage';
 let activePort: chrome.runtime.Port | null = null; // Global variable to store the active port
 
@@ -42,6 +48,34 @@ chrome.runtime.onConnect.addListener(port => {
             console.log('set cookie successully');
           });
           sendResponse({ type: 'SelectSlot', data: 'success' });
+          break;
+        }
+        case 'SelectSlotRedirect': {
+          const selectedSlot = await SlotStorage.getSlotById(message.input.id);
+          chrome.cookies.set(removeReadOnlyProperties(selectedSlot.data), () => {
+            console.log('set cookie successully');
+          });
+
+          await redirectCurrentTab(message.input.tabId, message.input.url);
+          sendResponse({ type: 'SelectSlotRedirect', data: 'success' });
+          break;
+        }
+        case 'ShareChatRedirect': {
+          const selectedSlot = await SlotStorage.getSlotById(message.input.id);
+          chrome.cookies.set(removeReadOnlyProperties(selectedSlot.data), () => {
+            console.log('set cookie successully');
+          });
+
+          const shareData = await shareChatInBg(message.input.url);
+
+          if (shareData.success && shareData.shareUrl && shareData.shareId) {
+            await redirectCurrentTab(message.input.tabId, shareData.shareUrl);
+
+            sendResponse({ type: 'ShareChatRedirect', data: shareData.shareUrl });
+            break;
+          }
+
+          sendResponse({ type: 'ShareChatRedirect', data: 'failed' });
           break;
         }
         case 'UpdateSlot': {

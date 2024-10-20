@@ -1,14 +1,5 @@
 import { sendMessageToBackground } from '@extension/storage/lib/service/message';
-import { tokenStorage } from '@extension/storage';
-
-import {
-  getConversationIdByURL,
-  createHeader,
-  getCurrentNodeId,
-  createShareURL,
-  activeShareURL,
-  hostUrl,
-} from '@extension/shared';
+import { type RedirectWithId } from '@extension/storage/types';
 
 export const handleDeleteSlot = (id: string) => {
   sendMessageToBackground({
@@ -34,80 +25,48 @@ export const handleSelectSlot = (id: string, callback?: () => void) => {
   });
 };
 
-export async function redirectCurrentTab(newUrl: string) {
-  try {
-    // Query for the active tab in the current window
-    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
-
-    const activeTab = tabs[0]; // Get the active tab
-
-    if (activeTab?.id && newUrl) {
-      // Update the current active tab with the new URL
-      await chrome.tabs.update(activeTab.id, { url: newUrl });
-
-      return 'success';
-    } else {
-      console.error('No active tab found or invalid URL');
-    }
-
-    return 'falled';
-  } catch (error) {
-    console.error('Failed to redirect the tab:', error);
-    return 'falled';
-  }
-}
-
 export async function getCurrentURL() {
-  return new Promise(resolve => {
+  return new Promise((resolve, reject) => {
     chrome.tabs.query({ active: true, currentWindow: true }, function (tabs) {
       if (chrome.runtime.lastError) {
-        resolve(null); // Reject the promise if there's an error
+        reject({}); // Reject the promise if there's an error
       } else {
-        resolve(tabs[0].url); // Resolve the promise with the active tab's URL
+        resolve({ tabId: tabs[0].id, url: tabs[0].url }); // Resolve the promise with the active tab's URL
       }
     });
   });
 }
 
-export async function getSwitchURL() {
-  const currentURL = await getCurrentURL();
+export const handleSelectSlotRedirect = (input: RedirectWithId, onSuccess?: () => void, onError?: () => void) => {
+  sendMessageToBackground({
+    message: {
+      input,
+      type: 'SelectSlotRedirect',
+    },
+    handleSuccess: () => {
+      onSuccess && onSuccess();
+    },
+    handleError: () => {
+      onError && onError();
+    },
+  });
+};
 
-  if (typeof currentURL !== 'string') {
-    return hostUrl;
-  }
-
-  const isShareURL = currentURL.includes('/share/');
-
-  return isShareURL ? currentURL : hostUrl;
-}
-
-export async function shareChatInBg(): Promise<{ success: boolean; msg: string; shareId?: string; shareUrl?: string }> {
-  const currentURL = await getCurrentURL();
-  const conversationId = typeof currentURL === 'string' ? getConversationIdByURL(currentURL) : null;
-
-  if (!conversationId) {
-    return { success: false, msg: 'ConversationId not found!' };
-  }
-
-  const bearerToken = await tokenStorage.get();
-  const header = createHeader(bearerToken?.token);
-
-  if (!header) {
-    return { success: false, msg: 'Token not found!' };
-  }
-
-  try {
-    const currentNodeId = await getCurrentNodeId(conversationId, header);
-    const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
-
-    const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;
-
-    if (isActivatedSuccess) {
-      return { success: true, msg: 'success', ...shareData };
-    }
-
-    return { success: false, msg: 'Cannot share the current chat! Please try again later!' };
-  } catch (err) {
-    return { success: false, msg: 'Something went wrong! try share chat again' };
-  }
-}
+export const handleShareChatRedirect = (
+  input: RedirectWithId,
+  onSuccess?: (data: string) => void,
+  onError?: () => void,
+) => {
+  sendMessageToBackground({
+    message: {
+      input: input,
+      type: 'ShareChatRedirect',
+    },
+    handleSuccess: data => {
+      onSuccess && onSuccess(data);
+    },
+    handleError: () => {
+      onError && onError();
+    },
+  });
+};

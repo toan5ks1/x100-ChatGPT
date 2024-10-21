@@ -195,3 +195,7 @@ export function getEmailFromAuthHeader(authHeaderValue?: string) {
 export const getHeader = async () => {
   return tokenStorage.get().then(bearerToken => bearerToken?.token);
 };
+
+export const openUrlNewTab = (url: string) => {
+  window.open(url, '_blank', 'noopener,noreferrer');
+};

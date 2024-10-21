@@ -5,6 +5,7 @@ import { continueChat } from './lib/utils';
 
 export default function App() {
   const [isOpenSharedModal, setIsOpenSharedModal] = useState(false);
+  const [isHitLimit, setIsHitLimit] = useState(false);
   const [header, setHeader] = useState<string>();
 
   const checkLimitAutoShare = async () => {
@@ -13,7 +14,7 @@ export default function App() {
       const isHitLimit = await checkHitLimit(authHeader);
 
       if (isHitLimit) {
-        setIsOpenSharedModal(true);
+        setIsHitLimit(true);
       }
     }
   };
@@ -34,5 +35,12 @@ export default function App() {
     continueChat();
   }, []);
 
-  return <DialogSharedURL isOpen={isOpenSharedModal} setIsOpen={setIsOpenSharedModal} header={header} />;
+  return (
+    <DialogSharedURL
+      isOpen={isOpenSharedModal}
+      setIsOpen={setIsOpenSharedModal}
+      header={header}
+      isHitLimit={isHitLimit}
+    />
+  );
 }

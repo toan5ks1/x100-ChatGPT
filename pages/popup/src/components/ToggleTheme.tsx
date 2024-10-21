@@ -9,7 +9,7 @@ export function ModeToggle({ className }: { className: string }) {
 
   return (
     <Button className={className} onClick={exampleThemeStorage.toggle} aria-label="Toggle theme">
-      {theme === 'light' ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
+      {theme === 'light' ? <SunIcon className="size-3" /> : <MoonIcon className="size-3" />}
     </Button>
   );
 }

@@ -6,12 +6,8 @@ import { handleDeleteSlot, removeCookie } from '@src/utils';
 
 import { useSwitchAccount } from '../hooks/useSwitchAccount';
 import { useShareChat } from '@src/hooks/useShareChat';
-import { getEmailFromAuthHeader, getHeader, hostUrl } from '@extension/shared';
+import { getEmailFromAuthHeader, getHeader, hostUrl, openUrlNewTab } from '@extension/shared';
 import { useEffect, useState } from 'react';
-
-export const addNewSlot = () => {
-  window.open(hostUrl, '_blank', 'noopener,noreferrer');
-};
 
 export default function AccountListPage() {
   const slots = useGetAllSlots();
@@ -95,8 +91,8 @@ export default function AccountListPage() {
       </ul>
       {slots.length < 5 ? (
         <Button
-          className="flex items-center gap-1 border border-zinc-500 rounded-md px-2 py-1"
-          onClick={() => removeCookie(addNewSlot)}>
+          className="flex justify-center items-center gap-1 border border-zinc-500 rounded-sm py-0.5"
+          onClick={() => removeCookie(() => openUrlNewTab(hostUrl))}>
           <PlusIcon className="size-4" />
           Add profile
         </Button>

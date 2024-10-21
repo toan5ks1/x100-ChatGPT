@@ -32,7 +32,9 @@ export default function App() {
         alert('Could not get account information!');
       });
 
-    continueChat();
+    setTimeout(() => {
+      continueChat();
+    }, 100);
   }, []);
 
   return (

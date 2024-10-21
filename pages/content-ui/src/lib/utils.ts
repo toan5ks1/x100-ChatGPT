@@ -55,7 +55,7 @@ export const continueChat = () => {
     // Check if the button exists
     if (button) {
       // Programmatically click the button
-      button.click(); // Now TypeScript recognizes this as an anchor element
+      button.click();
     } else {
       console.log('Button not found.');
     }

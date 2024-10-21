@@ -8,12 +8,7 @@ export function ModeToggle({ className }: { className: string }) {
   const theme = useStorage(exampleThemeStorage);
 
   return (
-    <Button
-      className={className}
-      variant="ghost"
-      size="icon"
-      onClick={exampleThemeStorage.toggle}
-      aria-label="Toggle theme">
+    <Button className={className} onClick={exampleThemeStorage.toggle} aria-label="Toggle theme">
       {theme === 'light' ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
     </Button>
   );

@@ -47,7 +47,7 @@ export default function AccountListPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button disabled={slot.id === email} size="icon" onClick={() => switchAccount(slot.id)}>
+                  <Button disabled={slot.id === email} onClick={() => switchAccount(slot.id)}>
                     {isPending && selectedId === slot.id ? (
                       <Icons.spinner className="size-4 animate-spin" />
                     ) : (
@@ -64,7 +64,7 @@ export default function AccountListPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button disabled={slot.id === email} size="icon" onClick={() => shareChat(slot.id)}>
+                  <Button disabled={slot.id === email} onClick={() => shareChat(slot.id)}>
                     {isPendingShare && selectedIdShare === slot.id ? (
                       <Icons.spinner className="size-4 animate-spin" />
                     ) : (
@@ -81,7 +81,7 @@ export default function AccountListPage() {
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button size="icon" onClick={() => handleDeleteSlot(slot.id)}>
+                  <Button onClick={() => handleDeleteSlot(slot.id)}>
                     <TrashIcon className="text-red-500" />
                   </Button>
                 </TooltipTrigger>

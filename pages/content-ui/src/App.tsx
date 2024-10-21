@@ -34,9 +34,5 @@ export default function App() {
     continueChat();
   }, []);
 
-  return (
-    <>
-      <DialogSharedURL isOpen={isOpenSharedModal} setIsOpen={setIsOpenSharedModal} header={header} />
-    </>
-  );
+  return <DialogSharedURL isOpen={isOpenSharedModal} setIsOpen={setIsOpenSharedModal} header={header} />;
 }

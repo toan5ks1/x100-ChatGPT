@@ -1,82 +1,48 @@
 import { DialogSharedURL } from './components/shareUrlModal';
-import { useCallback, useEffect, useState } from 'react';
-import { tokenStorage } from '@extension/storage';
-import { checkHitLimit, createHeader, onContinueChat, type ShareChat, shareChat } from '@extension/shared';
-import { handleAutoSelectSlot } from './lib/utils';
-
-const handleRedirect = async (shareUrl?: string) => {
-  shareUrl &&
-    handleAutoSelectSlot(() => {
-      window.location.href = shareUrl;
-    });
-};
-
-const getShareIdFromShareUrl = () => {
-  const href = window.location.href;
-
-  return !href.includes('/continue') ? href.split('/share/')?.[1] : null;
-};
+import { useEffect, useState } from 'react';
+import { checkHitLimit, createHeader, getHeader } from '@extension/shared';
+import { continueChat } from './lib/utils';
 
 export default function App() {
-  const [sharedData, setSharedData] = useState<ShareChat>({});
-  const [messageCount, setMessageCount] = useState(0);
   const [isOpenSharedModal, setIsOpenSharedModal] = useState(false);
+  const [isHitLimit, setIsHitLimit] = useState(false);
+  const [header, setHeader] = useState<string>();
 
-  // const addConversationListener = () => {
-  //   chrome.runtime.onConnect.addListener(function (port) {
-  //     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  //     port.onMessage.addListener((responseMessage: any) => {
-  //       if (responseMessage.type === 'MessageSent') {
-  //         console.log('message received..');
-  //         setMessageCount(pre => pre + 1);
-  //       }
-  //     });
-  //   });
-  //   console.log('added listener');
-  // };
-
-  const checkLimitAutoShare = useCallback(async () => {
-    const bearerToken = await tokenStorage.get();
-    const header = createHeader(bearerToken?.token);
-
+  const checkLimitAutoShare = async () => {
     if (header) {
-      const isHitLimit = await checkHitLimit(header);
+      const authHeader = createHeader(header);
+      const isHitLimit = await checkHitLimit(authHeader);
 
       if (isHitLimit) {
-        const shareData = await shareChat(header);
-
-        if (shareData.success) {
-          setSharedData(shareData);
-          setIsOpenSharedModal(true);
-        } else {
-          // alert(shareData.msg ?? 'Share chat failed!');
-          console.log(shareData.msg ?? 'Share chat failed!');
-        }
+        setIsHitLimit(true);
       }
     }
-  }, []);
+  };
 
   useEffect(() => {
-    // addConversationListener();
     checkLimitAutoShare();
-
-    const shareId = getShareIdFromShareUrl();
-    shareId && onContinueChat(shareId);
-  }, []);
+  }, [header]);
 
   useEffect(() => {
-    // checkLimitAsync();
-    console.log(messageCount);
-  }, [messageCount]);
+    getHeader()
+      .then(header => {
+        setHeader(header);
+      })
+      .catch(() => {
+        alert('Could not get account information!');
+      });
+
+    setTimeout(() => {
+      continueChat();
+    }, 100);
+  }, []);
 
   return (
-    <>
-      <DialogSharedURL
-        isOpen={isOpenSharedModal}
-        setIsOpen={setIsOpenSharedModal}
-        url={sharedData.shareUrl}
-        onContinue={() => handleRedirect(sharedData.shareUrl)}
-      />
-    </>
+    <DialogSharedURL
+      isOpen={isOpenSharedModal}
+      setIsOpen={setIsOpenSharedModal}
+      header={header}
+      isHitLimit={isHitLimit}
+    />
   );
 }

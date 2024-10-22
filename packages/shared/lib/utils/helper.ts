@@ -1,20 +1,29 @@
-import { conversationUrl, createShareUrl, hostUrl, litmitChatUrl } from './constant';
+import { tokenStorage } from '@extension/storage';
+import { conversationUrl, createShareUrl, litmitChatUrl, profileKey } from './constant';
 
 export function getConversationIdByURL(url: string = window.location.href) {
-  // const url = window.location.href;
-
   return url.split('/c/')?.[1];
 }
 
-export function createHeader(token?: string) {
-  if (!token) {
-    return undefined;
-  }
+export function createHeader(token: string) {
   const myHeaders = new Headers();
   myHeaders.append('Content-Type', 'application/json');
   myHeaders.append('Authorization', token);
 
   return myHeaders;
+}
+
+export async function onContinueChat(shareUrl: string) {
+  try {
+    const url = `${shareUrl}/continue?_data=routes%2Fshare.%24shareId.%28%24action%29`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    return data?.serverResponse?.data?.continue_conversation_url;
+  } catch (error) {
+    console.log('Error making the request:', error);
+    return null;
+  }
 }
 
 export async function getCurrentNodeId(conversationId: string, header: Headers) {
@@ -37,25 +46,31 @@ export async function createShareURL(conversationId: string, currentNodeId: stri
     const params = { conversation_id: conversationId, current_node_id: currentNodeId, is_anonymous: true };
 
     const response = await fetch(`${createShareUrl}/create`, {
-      method: 'POST', // or "POST", "PUT", etc. depending on your use case
+      method: 'POST',
       headers: header,
       body: JSON.stringify(params),
     });
     const data = await response.json();
 
-    return { shareId: data?.share_id, shareUrl: data?.share_url };
+    return { shareId: data?.share_id, shareUrl: data?.share_url, isAlreadyExist: data?.already_exists };
   } catch (error) {
     console.error('Error making the request:', error);
     return {};
   }
 }
 
-export async function activeShareURL(shareId: string, header: Headers) {
+export async function activeShareURL(shareId: string, currentNodeId: string, header: Headers) {
   try {
-    const params = { is_public: true, is_visible: true, is_anonymous: true };
+    const params = {
+      is_public: true,
+      is_visible: true,
+      is_anonymous: true,
+      share_id: shareId,
+      current_node_id: currentNodeId,
+    };
 
     const response = await fetch(`${createShareUrl}/${shareId}`, {
-      method: 'PATCH', // or "POST", "PUT", etc. depending on your use case
+      method: 'PATCH',
       headers: header,
       body: JSON.stringify(params),
     });
@@ -84,19 +99,6 @@ export async function checkHitLimit(header: Headers) {
   }
 }
 
-export async function onContinueChat(shareId: string) {
-  try {
-    const url = `${hostUrl}/share/${shareId}/continue?_data=routes%2Fshare.%24shareId.%28%24action%29`;
-    const response = await fetch(url);
-    const data = await response.json();
-    window.location.href = `${hostUrl}/share/${shareId}/continue`;
-    return data;
-  } catch (error) {
-    console.log('Error making the request:', error);
-    return null;
-  }
-}
-
 export async function shareChat(header: Headers) {
   const conversationId = getConversationIdByURL();
   if (header && conversationId) {
@@ -104,7 +106,9 @@ export async function shareChat(header: Headers) {
       const currentNodeId = await getCurrentNodeId(conversationId, header);
       const shareData = currentNodeId ? await createShareURL(conversationId, currentNodeId, header) : {};
 
-      const isActivatedSuccess = shareData.shareId ? await activeShareURL(shareData.shareId, header) : false;
+      const isActivatedSuccess = shareData.shareId
+        ? await activeShareURL(shareData.shareId, currentNodeId!, header)
+        : false;
 
       if (isActivatedSuccess) {
         return { success: true, msg: 'success', ...shareData };
@@ -118,3 +122,80 @@ export async function shareChat(header: Headers) {
     return { success: false, msg: 'Token or conversationId not found!' };
   }
 }
+
+export async function redirectCurrentTab(tabId: number, newUrl: string) {
+  try {
+    if (tabId && newUrl) {
+      // Update the current active tab with the new URL
+      await chrome.tabs.update(tabId, { url: newUrl });
+
+      return 'success';
+    } else {
+      console.error('No active tab found or invalid URL');
+    }
+
+    return 'falled';
+  } catch (error) {
+    console.error('Failed to redirect the tab:', error);
+    return 'falled';
+  }
+}
+
+export async function redirectCurrentTabV2(newUrl: string) {
+  try {
+    // Query for the active tab in the current window
+    const tabs = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    const activeTab = tabs[0]; // Get the active tab
+
+    if (activeTab?.id && newUrl) {
+      // Update the current active tab with the new URL
+      await chrome.tabs.update(activeTab.id, { url: newUrl });
+
+      return 'success';
+    } else {
+      console.error('No active tab found or invalid URL');
+    }
+
+    return 'falled';
+  } catch (error) {
+    console.error('Failed to redirect the tab:', error);
+    return 'falled';
+  }
+}
+
+export function parseJwt(token: string) {
+  const base64Url = token.split('.')[1];
+  const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+  const jsonPayload = decodeURIComponent(
+    atob(base64)
+      .split('')
+      .map(function (c) {
+        return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+      })
+      .join(''),
+  );
+
+  return JSON.parse(jsonPayload);
+}
+
+export function getEmailFromAuthHeader(authHeaderValue?: string) {
+  if (!authHeaderValue) {
+    return null;
+  }
+
+  const token = authHeaderValue.split(' ')[1];
+
+  const decodedToken = parseJwt(token);
+  const email = decodedToken[profileKey].email;
+
+  return email;
+}
+
+export const getHeader = async () => {
+  return tokenStorage.get().then(bearerToken => bearerToken?.token);
+};
+
+export const openUrlNewTab = (url: string) => {
+  window.open(url, '_blank', 'noopener,noreferrer');
+};

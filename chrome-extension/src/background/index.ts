@@ -2,9 +2,15 @@ import Logger from './utils/logger';
 import { loginURL } from './utils/constant';
 import { sendErrorMessageToClient, sendMessageToClient } from './utils/message';
 import { type RequiredDataNullableInput } from './utils/type';
-import { exhaustiveMatchingGuard, findAvailableSlot, getEmailFromAuthHeader, removeReadOnlyProperties } from './utils';
+import { exhaustiveMatchingGuard, findAvailableSlot, removeReadOnlyProperties, shareChatInBg } from './utils';
 import { type Message } from '@extension/storage/types';
-import { cookieName, hostUrl, conversationUrl } from '@extension/shared/index';
+import {
+  cookieName,
+  hostUrl,
+  redirectCurrentTab,
+  chatUrlPrefix,
+  getEmailFromAuthHeader,
+} from '@extension/shared/index';
 import { SlotStorage, tokenStorage } from '@extension/storage';
 let activePort: chrome.runtime.Port | null = null; // Global variable to store the active port
 
@@ -44,6 +50,34 @@ chrome.runtime.onConnect.addListener(port => {
           sendResponse({ type: 'SelectSlot', data: 'success' });
           break;
         }
+        case 'SelectSlotRedirect': {
+          const selectedSlot = await SlotStorage.getSlotById(message.input.id);
+          chrome.cookies.set(removeReadOnlyProperties(selectedSlot.data), () => {
+            console.log('set cookie successully');
+          });
+
+          await redirectCurrentTab(message.input.tabId, message.input.url);
+          sendResponse({ type: 'SelectSlotRedirect', data: 'success' });
+          break;
+        }
+        case 'ShareChatRedirect': {
+          const selectedSlot = await SlotStorage.getSlotById(message.input.id);
+          chrome.cookies.set(removeReadOnlyProperties(selectedSlot.data), () => {
+            console.log('set cookie successully');
+          });
+
+          const shareData = await shareChatInBg(message.input.url);
+
+          if (shareData.success && shareData.shareUrl && shareData.shareId) {
+            await redirectCurrentTab(message.input.tabId, shareData.shareUrl);
+
+            sendResponse({ type: 'ShareChatRedirect', data: shareData.shareUrl });
+            break;
+          }
+
+          sendResponse({ type: 'ShareChatRedirect', data: 'failed' });
+          break;
+        }
         case 'UpdateSlot': {
           await SlotStorage.updateSlot(message.input);
           sendResponse({ type: 'UpdateSlot', data: 'success' });
@@ -57,9 +91,7 @@ chrome.runtime.onConnect.addListener(port => {
         }
         case 'AutoSelectSlot': {
           const slots = await SlotStorage.getAllSlots();
-          const token = await tokenStorage.get();
-          const email = getEmailFromAuthHeader(token?.token); // email equal Id
-          const availableSlot = findAvailableSlot(slots, email);
+          const availableSlot = findAvailableSlot(slots, message.input);
 
           if (availableSlot) {
             chrome.cookies.set(removeReadOnlyProperties(availableSlot.data), () => {
@@ -68,13 +100,6 @@ chrome.runtime.onConnect.addListener(port => {
           }
 
           sendResponse({ type: 'AutoSelectSlot', data: availableSlot ?? 'failed' });
-          break;
-        }
-        case 'GetCurrentSlot': {
-          const token = await tokenStorage.get();
-          const email = getEmailFromAuthHeader(token?.token);
-          sendResponse({ type: 'GetCurrentSlot', data: email ?? 'failed' });
-
           break;
         }
         case 'DeleteSlot': {
@@ -103,20 +128,26 @@ chrome.webRequest.onSendHeaders.addListener(
 
       await tokenStorage.set({ token });
       await SlotStorage.addSlot({ id: email, data: cookie });
-      // Send response to client
-      activePort && sendResponseWithPort(activePort, { type: 'AddNewSlot', data: 'success' });
     }
   },
   { urls: [loginURL] },
   ['requestHeaders', 'extraHeaders'],
 );
 
-chrome.webRequest.onCompleted.addListener(
-  async details => {
-    if (details) {
-      // Send response to client to notice that the limit is hit
-      activePort && sendResponseWithPort(activePort, { type: 'MessageSent', data: 'success' });
-    }
-  },
-  { urls: [conversationUrl] },
-);
+// chrome.webRequest.onCompleted.addListener(
+//   async details => {
+//     if (details?.url) {
+//       // Send response to client to notice that the limit is hit
+//       activePort && sendResponseWithPort(activePort, { type: 'MessageSent', data: 'success' });
+//     }
+//   },
+//   { urls: [conversationUrl] },
+// );
+
+chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  // Check if the URL is fully loaded and matches the desired pattern
+  if (changeInfo.status === 'complete' && tab.url && tab.url.startsWith(chatUrlPrefix)) {
+    // Send response to client to notify that the URL has changed
+    activePort && sendResponseWithPort(activePort, { type: 'UrlChanged', data: 'success' });
+  }
+});

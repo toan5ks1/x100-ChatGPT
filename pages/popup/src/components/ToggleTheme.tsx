@@ -4,12 +4,12 @@ import { Button } from '@extension/ui/components/button';
 import { useStorage } from '@extension/shared';
 import { exampleThemeStorage } from '@extension/storage';
 
-export function ModeToggle() {
+export function ModeToggle({ className }: { className: string }) {
   const theme = useStorage(exampleThemeStorage);
 
   return (
-    <Button variant="ghost" size="icon" onClick={exampleThemeStorage.toggle} aria-label="Toggle theme">
-      {theme === 'light' ? <SunIcon className="size-4" /> : <MoonIcon className="size-4" />}
+    <Button className={className} onClick={exampleThemeStorage.toggle} aria-label="Toggle theme">
+      {theme === 'light' ? <SunIcon className="size-3" /> : <MoonIcon className="size-3" />}
     </Button>
   );
 }

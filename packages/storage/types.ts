@@ -2,6 +2,12 @@
 export type Slot = { id: string; data: any; expTime?: Date };
 export type ActionResult = 'success' | 'failed';
 
+export interface RedirectWithId {
+  url: string;
+  id: string;
+  tabId: number;
+}
+
 type AddNewSlot = {
   type: 'AddNewSlot';
   input: Slot;
@@ -11,6 +17,16 @@ type SelectSlot = {
   type: 'SelectSlot';
   input: string;
   data?: ActionResult;
+};
+type SelectSlotRedirect = {
+  type: 'SelectSlotRedirect';
+  input: RedirectWithId;
+  data?: ActionResult;
+};
+type ShareChatRedirect = {
+  type: 'ShareChatRedirect';
+  input: RedirectWithId;
+  data?: ActionResult | string;
 };
 type UpdateSlot = {
   type: 'UpdateSlot';
@@ -32,9 +48,14 @@ type MessageSent = {
   input?: never;
   data?: ActionResult;
 };
+type UrlChanged = {
+  type: 'UrlChanged';
+  input?: never;
+  data?: ActionResult;
+};
 type AutoSelectSlot = {
   type: 'AutoSelectSlot';
-  input?: never;
+  input?: string;
   data?: Slot;
 };
 type GetSlots = {
@@ -60,8 +81,11 @@ export type Message =
   | GetSlots
   | GetCurrentSlot
   | SelectSlot
+  | SelectSlotRedirect
+  | ShareChatRedirect
   | DeleteSlot
   | MessageSent
+  | UrlChanged
   | AutoSelectSlot;
 
 export type RequestMessage<M = Message> = Omit<M, 'data'>;

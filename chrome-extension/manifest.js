@@ -12,7 +12,7 @@ const manifest = {
   version: packageJson.version,
   description: `🚀 The ultimate Chrome extension designed to give you free, legit, and seamless access to GPT-4o (unlimited free tier).`,
   host_permissions: ['*://chatgpt.com/*'],
-  permissions: ['storage', 'scripting', 'tabs', 'activeTab', 'cookies', 'webRequest'],
+  permissions: ['storage', 'tabs', 'activeTab', 'cookies', 'webRequest'],
   background: {
     service_worker: 'background.iife.js',
     type: 'module',

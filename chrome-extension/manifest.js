@@ -1,59 +1,45 @@
 import fs from 'node:fs';
-import deepmerge from 'deepmerge';
 
 const packageJson = JSON.parse(fs.readFileSync('../package.json', 'utf8'));
-
-const isFirefox = process.env.__FIREFOX__ === 'true';
-
-const sidePanelConfig = {
-  side_panel: {
-    default_path: 'side-panel/index.html',
-  },
-  permissions: ['sidePanel'],
-};
 
 /**
  * After changing, please reload the extension at `chrome://extensions`
  * @type {chrome.runtime.ManifestV3}
  */
-const manifest = deepmerge(
-  {
-    manifest_version: 3,
-    name: 'SorryGPT-4o',
-    version: packageJson.version,
-    description: `The ultimate Chrome extension designed to give you free access to GPT-4o, the latest and most powerful AI model by OpenAI.`,
-    host_permissions: ['<all_urls>'],
-    permissions: ['storage', 'scripting', 'tabs', 'activeTab', 'notifications', 'cookies', 'webRequest'],
-    options_page: 'options/index.html',
-    background: {
-      service_worker: 'background.iife.js',
-      type: 'module',
-    },
-    action: {
-      default_popup: 'popup/index.html',
-      default_icon: 'icon-34.png',
-    },
-    icons: {
-      128: 'icon-128.png',
-    },
-    content_scripts: [
-      {
-        matches: ['*://chatgpt.com/*'],
-        js: ['content-ui/index.iife.js'],
-      },
-      {
-        matches: ['*://chatgpt.com/*'],
-        css: ['content.css'], // public folder
-      },
-    ],
-    web_accessible_resources: [
-      {
-        resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],
-        matches: ['*://*/*'],
-      },
-    ],
+const manifest = {
+  manifest_version: 3,
+  name: 'SorryGPT-4o',
+  version: packageJson.version,
+  description: `🚀 The ultimate Chrome extension designed to give you free, legit, and seamless access to GPT-4o (unlimited free tier).`,
+  host_permissions: ['*://chatgpt.com/*'],
+  permissions: ['storage', 'scripting', 'tabs', 'activeTab', 'cookies', 'webRequest'],
+  background: {
+    service_worker: 'background.iife.js',
+    type: 'module',
   },
-  !isFirefox && sidePanelConfig,
-);
+  action: {
+    default_popup: 'popup/index.html',
+    default_icon: 'icon-34.png',
+  },
+  icons: {
+    128: 'icon-128.png',
+  },
+  content_scripts: [
+    {
+      matches: ['*://chatgpt.com/*'],
+      js: ['content-ui/index.iife.js'],
+    },
+    {
+      matches: ['*://chatgpt.com/*'],
+      css: ['content.css'], // public folder
+    },
+  ],
+  web_accessible_resources: [
+    {
+      resources: ['*.js', '*.css', '*.svg', 'icon-128.png', 'icon-34.png'],
+      matches: ['*://*/*'],
+    },
+  ],
+};
 
 export default manifest;

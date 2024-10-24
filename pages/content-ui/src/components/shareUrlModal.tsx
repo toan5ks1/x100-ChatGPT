@@ -73,14 +73,12 @@ export function DialogSharedURL({ isOpen, isHitLimit, setIsOpen, header }: Dialo
                 <HeartFilledIcon className="size-4" />
                 Buy me a coffee
               </Button>
-              {isHitLimit && (
-                <Button
-                  onClick={handleShare}
-                  className="flex items-center gap-1.5 border border-purple-700 rounded-md px-3 py-1">
-                  Continue
-                  {isPending ? <Icons.spinner className="size-4 animate-spin" /> : <ShuffleIcon className="size-4" />}
-                </Button>
-              )}
+              <Button
+                onClick={handleShare}
+                className="flex items-center gap-1.5 border border-purple-700 rounded-md px-3 py-1">
+                Continue
+                {isPending ? <Icons.spinner className="size-4 animate-spin" /> : <ShuffleIcon className="size-4" />}
+              </Button>
             </div>
             <Button onClick={() => setIsOpen(false)} className="absolute right-2 top-2 rounded-sm p-0.5 bg-zinc-700">
               <Cross2Icon className="size-4" />

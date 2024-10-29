@@ -1,48 +1,16 @@
 import { DialogSharedURL } from './components/shareUrlModal';
 import { useEffect, useState } from 'react';
-import { checkHitLimit, createHeader, getHeader } from '@extension/shared';
 import { continueChat } from './lib/utils';
 
 export default function App() {
   const [isOpenSharedModal, setIsOpenSharedModal] = useState(false);
-  const [isHitLimit, setIsHitLimit] = useState(false);
-  const [header, setHeader] = useState<string>();
-
-  const checkLimitAutoShare = async () => {
-    if (header) {
-      const authHeader = createHeader(header);
-      const isHitLimit = await checkHitLimit(authHeader);
-
-      if (isHitLimit) {
-        setIsHitLimit(true);
-      }
-    }
-  };
 
   useEffect(() => {
-    checkLimitAutoShare();
-  }, [header]);
-
-  useEffect(() => {
-    getHeader()
-      .then(header => {
-        setHeader(header);
-      })
-      .catch(() => {
-        alert('Could not get account information!');
-      });
-
+    // Auto click Continue after redirect
     setTimeout(() => {
       continueChat();
     }, 100);
   }, []);
 
-  return (
-    <DialogSharedURL
-      isOpen={isOpenSharedModal}
-      setIsOpen={setIsOpenSharedModal}
-      header={header}
-      isHitLimit={isHitLimit}
-    />
-  );
+  return <DialogSharedURL isOpen={isOpenSharedModal} setIsOpen={setIsOpenSharedModal} />;
 }
